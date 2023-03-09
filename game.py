@@ -25,10 +25,28 @@ class Game:
 class Tile:
     def __init__(self, value=0):
         self.value = value
-        self.walls = []
+        self.walls = [1 if random.randint(0,1) <= 0.3 else 0 for _ in range(4)]
 
     def __str__(self):
+        
         return "{}".format(self.value)
+
+    def has_wall_up(self):
+        return self.walls[0]
+
+    def has_wall_right(self):
+        return self.walls[1]
+
+    def has_wall_down(self):
+        return self.walls[2]
+
+    def has_wall_left(self):
+        return self.walls[3]
+
+    #  || _ ¯¯¯¯¯¯
+    #  ¯
+
+    
 
 class GameState:
     # To access a (x, y) coord on the board: self.board[y][x] starting at (0,0)
@@ -97,7 +115,7 @@ class GameState:
 
 
     def print_board(self):
-        # print("   0  1  2  3  4  5 --> X")
+        # print("   0  1  2  3  4  5 --> X")z
         for i in range(len(self.board)):
             # print(i, end=" ")
             for j in self.board[i]:
