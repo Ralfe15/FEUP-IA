@@ -7,11 +7,11 @@ DEBUG = False
 
 def generate_initial_state():
     # Returns a game in initial state: a 6x6 board with 4 players in top left and bottom right corners
-    board = [[0 for _ in range(6)] for _ in range(6)]
-    board[0][0] = board[0][1] = board[1][0] = board[1][1] = 1
+    board = [[Tile() for _ in range(6)] for _ in range(6)]
+    board[0][0] = board[0][1] = board[1][0] = board[1][1] = Tile(1)
     board[BOARD_SIZE - 1][BOARD_SIZE - 1] = board[BOARD_SIZE - 1][BOARD_SIZE - 2] = board[BOARD_SIZE - 2][
         BOARD_SIZE - 1] \
-        = board[BOARD_SIZE - 2][BOARD_SIZE - 2] = 2
+        = board[BOARD_SIZE - 2][BOARD_SIZE - 2] = Tile(2)
     return board
 
 
@@ -21,6 +21,14 @@ class Game:
         # Generate new game state, fresh board and random starting player
         self.state = GameState(generate_initial_state(), random.randint(1, 2))
 
+
+class Tile:
+    def __init__(self, value=0):
+        self.value = value
+        self.walls = []
+
+    def __str__(self):
+        return "{}".format(self.value)
 
 class GameState:
     # To access a (x, y) coord on the board: self.board[y][x] starting at (0,0)
@@ -41,40 +49,40 @@ class GameState:
     # Legal moves are: moving to an empty space left/right/up/down, leaping one piece to an empty space
     def get_moves(self, x, y):
         moves = []
-        if x not in range(BOARD_SIZE) or y not in range(BOARD_SIZE) or self.board[x][y] == 0:
+        if x not in range(BOARD_SIZE) or y not in range(BOARD_SIZE) or self.board[x][y].value == 0:
             return []
 
         # Check up
-        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x] == 0:
+        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x].value == 0:
             if DEBUG: print("move up")
             moves.append([(x, y - 1), 1])
         # Check down
-        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x] == 0:
+        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x].value == 0:
             if DEBUG: print("move down")
             moves.append([(x, y + 1), 1])
         # Check right
-        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1] == 0:
+        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1].value == 0:
             if DEBUG: print("move right")
             moves.append([(x + 1, y), 1])
         # Check left
-        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1] == 0:
+        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1].value == 0:
             if DEBUG: print("move left")
             moves.append([(x - 1, y), 1])
 
         # Check leap up
-        if y - 2 in range(BOARD_SIZE) and self.board[y - 1][x] != 0 and self.board[y - 2][x] == 0:
+        if y - 2 in range(BOARD_SIZE) and self.board[y - 1][x].value != 0 and self.board[y - 2][x].value == 0:
             if DEBUG: print("leap up")
             moves.append([(x, y - 2), 1])
         # Check leap down
-        if y + 2 in range(BOARD_SIZE) and self.board[y + 1][x] != 0 and self.board[y + 2][x] == 0:
+        if y + 2 in range(BOARD_SIZE) and self.board[y + 1][x].value != 0 and self.board[y + 2][x].value == 0:
             if DEBUG: print("leap down")
             moves.append([(x, y + 2), 1])
         # Check leap right
-        if x + 2 in range(BOARD_SIZE) and self.board[y][x + 1] != 0 and self.board[y][x + 2] == 0:
+        if x + 2 in range(BOARD_SIZE) and self.board[y][x + 1].value != 0 and self.board[y][x + 2].value == 0:
             if DEBUG: print("leap right")
             moves.append([(x + 2, y), 1])
         # Check leap left
-        if x - 2 in range(BOARD_SIZE) and self.board[y][x - 1] != 0 and self.board[y][x - 2] == 0:
+        if x - 2 in range(BOARD_SIZE) and self.board[y][x - 1].value != 0 and self.board[y][x - 2].value == 0:
             if DEBUG: print("leap left")
             moves.append([(x - 2, y), 1])
 
@@ -89,8 +97,10 @@ class GameState:
 
 
     def print_board(self):
-        print("   0  1  2  3  4  5 --> X")
+        # print("   0  1  2  3  4  5 --> X")
         for i in range(len(self.board)):
-            print(i, end=" ")
-            print(self.board[i])
+            # print(i, end=" ")
+            for j in self.board[i]:
+                print(j, end=" ")
+            print("")
 
