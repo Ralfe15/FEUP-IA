@@ -56,11 +56,12 @@ class Tile:
 
 class GameState:
     # To access a (x, y) coord on the board: self.board[y][x] starting at (0,0)
-    def __init__(self, board, curr_player):
+    def __init__(self, board, curr_player, move_credits = 3):
         self.board = board
         self.curr_player = curr_player
         self.p1_pieces = []
         self.p2_pieces = []
+        self.move_credits = move_credits
         for i in range(len(self.board)):
             for j in range(len(self.board)):
                 if self.board[i][j].value == 1:
@@ -71,28 +72,27 @@ class GameState:
     # Get available moves for piece at coords (x, y)
     # Returns list of available moves [[(x, y), cost]]
     # Legal moves are: moving to an empty space left/right/up/down, leaping one piece to an empty space
-    def get_moves(self, x, y):
+    def get_1_cost_moves(self, x, y):
         moves = []
-        
-        available_cost = 3
+
         if x not in range(BOARD_SIZE) or y not in range(BOARD_SIZE) or self.board[x][y].value == 0:
             return []
 
         # Check up
-        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x].value == 0:
-            moves.append([(x, y - 1), self.check_walls_simple_move(x,y, UP)])
+        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x].value == 0 and self.check_walls_simple_move == 1:
+            moves.append([(x, y - 1)])
 
         # Check down
-        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x].value == 0:
-            moves.append([(x, y + 1), self.check_walls_simple_move(x,y, DOWN)])
+        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x].value == 0 and self.check_walls_simple_move(x,y, DOWN) == 1:
+            moves.append([(x, y + 1)])
 
         # Check right
-        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1].value == 0:
-            moves.append([(x + 1, y), 1])
+        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1].value == 0 and self.check_walls_simple_move(x,y, RIGHT) == 1:
+            moves.append([(x + 1, y)])
 
         # Check left
-        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1].value == 0:
-            moves.append([(x - 1, y), 1])
+        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1].value == 0 and self.check_walls_simple_move(x,y, LEFT) == 1:
+            moves.append([(x - 1, y)])
 
 
         # Check leap up
@@ -111,6 +111,16 @@ class GameState:
         if x - 2 in range(BOARD_SIZE) and self.board[y][x - 1].value != 0 and self.board[y][x - 2].value == 0 and self.check_can_leap(x, y, LEFT):
             moves.append([(x - 2, y), 1])
         return moves
+    
+    def get_all_moves(self, player):
+        all_moves = {}
+        if player == 1:
+            for coords in self.p1_pieces:
+                all_moves[coords[0], coords[1]] = self.get_1_cost_moves(coords[0], coords[1])
+        elif player==2:
+            for coords in self.p2_pieces:
+                all_moves[coords[0], coords[1]] = self.get_1_cost_moves(coords[0], coords[1])
+        return all_moves
     
     def move_piece(self, xi, yi, xf, yf):
         if (xf, yf) in [move[0] for move in self.get_moves(xi, yi)]:
