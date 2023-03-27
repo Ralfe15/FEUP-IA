@@ -1,8 +1,9 @@
 # Game data structure representing a certain state of a LESS match
+import copy
 import random
 
 BOARD_SIZE = 6
-DEBUG = False
+DEBUG = True
 UP = 1
 DOWN = 2
 LEFT = 3
@@ -62,37 +63,38 @@ class GameState:
         self.p1_pieces = []
         self.p2_pieces = []
         self.move_credits = move_credits
+
         for i in range(len(self.board)):
             for j in range(len(self.board)):
                 if self.board[i][j].value == 1:
-                    self.p1_pieces.append([i, j])
+                    self.p1_pieces.append([j, i])
                 elif self.board[i][j].value == 2:
-                    self.p2_pieces.append([i, j])
+                    self.p2_pieces.append([j, i])
 
     # Get available moves for piece at coords (x, y)
     # Returns list of available moves [[(x, y), cost]]
     # Legal moves are: moving to an empty space left/right/up/down, leaping one piece to an empty space
-    def get_1_cost_moves(self, x, y):
+    def get_moves_by_cost(self, x, y, cost):
         moves = []
 
         if x not in range(BOARD_SIZE) or y not in range(BOARD_SIZE) or self.board[x][y].value == 0:
             return []
 
         # Check up
-        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x].value == 0 and self.check_walls_simple_move == 1:
-            moves.append([(x, y - 1)])
+        if y - 1 in range(BOARD_SIZE) and self.board[y - 1][x].value == 0:
+            moves.append([(x, y - 1), self.check_walls_simple_move(x, y, UP)])
 
         # Check down
-        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x].value == 0 and self.check_walls_simple_move(x,y, DOWN) == 1:
-            moves.append([(x, y + 1)])
+        if y + 1 in range(BOARD_SIZE) and self.board[y + 1][x].value == 0:
+            moves.append([(x, y + 1), self.check_walls_simple_move(x,y, DOWN)])
 
         # Check right
-        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1].value == 0 and self.check_walls_simple_move(x,y, RIGHT) == 1:
-            moves.append([(x + 1, y)])
+        if x + 1 in range(BOARD_SIZE) and self.board[y][x + 1].value == 0:
+            moves.append([(x + 1, y), self.check_walls_simple_move(x,y, RIGHT)])
 
         # Check left
-        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1].value == 0 and self.check_walls_simple_move(x,y, LEFT) == 1:
-            moves.append([(x - 1, y)])
+        if x - 1 in range(BOARD_SIZE) and self.board[y][x - 1].value == 0:
+            moves.append([(x - 1, y), self.check_walls_simple_move(x,y, LEFT)])
 
 
         # Check leap up
@@ -110,30 +112,78 @@ class GameState:
         # Check leap left
         if x - 2 in range(BOARD_SIZE) and self.board[y][x - 1].value != 0 and self.board[y][x - 2].value == 0 and self.check_can_leap(x, y, LEFT):
             moves.append([(x - 2, y), 1])
-        return moves
+
+        
+        return [move for move in moves if move[1] == cost]
     
     def get_all_moves(self, player):
         all_moves = {}
         if player == 1:
             for coords in self.p1_pieces:
-                all_moves[coords[0], coords[1]] = self.get_1_cost_moves(coords[0], coords[1])
+                # All possible moves with associated cost for player 1
+                all_moves[coords[0], coords[1]] = self.get_moves_by_cost(coords[0], coords[1], 1)
+                all_moves[coords[0], coords[1]] += self.get_moves_by_cost(coords[0], coords[1], 2)
+                all_moves[coords[0], coords[1]] += self.get_moves_by_cost(coords[0], coords[1], 3)
         elif player==2:
             for coords in self.p2_pieces:
-                all_moves[coords[0], coords[1]] = self.get_1_cost_moves(coords[0], coords[1])
+                all_moves[coords[0], coords[1]] = self.get_moves_by_cost(coords[0], coords[1], 1)
+                all_moves[coords[0], coords[1]] += self.get_moves_by_cost(coords[0], coords[1], 2)
+                all_moves[coords[0], coords[1]] += self.get_moves_by_cost(coords[0], coords[1], 3)
         return all_moves
     
+    def get_terminal_states(self, player):
+        #{(0, 0): [[(2, 0), 1]], (0, 1): [[(2, 1), 1], [(0, 2), 2]], (1, 0): [[(2, 0), 1]], (1, 1): [[(2, 1), 1], [(1, 2), 2]]}
+        terminal_states = []
+        intermediate_states_2_cost = []
+        intermediate_states_1_cost = []
+        aux_intermediate_states_1_cost = []
+        moves = self.get_all_moves(player)
+        for piece_coordinate, moves in moves.items():
+            for move in moves:
+                if move[1] == 3:
+                    # If move is a 3 cost, we are in a terminal state
+                    terminal_states.append(self.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+                elif move[1] == 2:
+                    # If a move is a 2 cost, we need to explore all possible one cost moves after it later
+                    intermediate_states_2_cost.append(self.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+                elif move[1] == 1:
+                    # If a move is a 1 cost, we need to explore all possible 2 cost moves after it and two 1 cost moves after it too
+                    intermediate_states_1_cost.append(self.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+        
+        # Explore possible 1 cost moves withn our 2 cost states
+        for state in intermediate_states_2_cost:
+            moves = state.get_all_moves(player)
+            for piece_coordinate, moves in moves.items():
+                for move in moves:
+                    if move[1] == 1:
+                        # 1 cost move
+                        terminal_states.append(state.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+
+        # Explore possible 2 cost and 1 cost withn our 1 cost states
+        for state in intermediate_states_1_cost:
+            moves = state.get_all_moves(player)
+            for piece_coordinate, moves in moves.items():
+                for move in moves:
+                    if move[1] == 1:
+                        aux_intermediate_states_1_cost.append(state.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+                    elif move[1] == 2:
+                        # 2 cost move
+                        terminal_states.append(state.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+        
+        # Finally, explore all 1 cost moves after witn our 2 sequential 1 cost plays
+        for state in aux_intermediate_states_1_cost:
+            moves = state.get_all_moves(player)
+            for piece_coordinate, moves in moves.items():
+                for move in moves:
+                    if move[1] == 1:
+                        terminal_states.append(state.move_piece(piece_coordinate[0],piece_coordinate[1], move[0][0], move[0][1]))
+
+        return terminal_states
+     
     def move_piece(self, xi, yi, xf, yf):
-        if (xf, yf) in [move[0] for move in self.get_moves(xi, yi)]:
-            # Update player pieces list
-            if self.board[yi][xi].value == 1:
-                self.p1_pieces = [[xf, yf] if coords == [xi, yi] else coords for coords in self.p1_pieces]
-            elif self.board[yi][xi].value == 2:
-                self.p1_pieces = [[xf, yf] if coords == [xi, yi] else coords for coords in self.p2_pieces]
-            # Move piece
-            self.board[yf][xf], self.board[yi][xi] = self.board[yi][xi], self.board[yf][xf]
-        else:
-            if DEBUG:
-                print("INVALID MOVE")
+            new_board = copy.deepcopy(self.board)
+            new_board[yf][xf],new_board[yi][xi] = self.board[yi][xi], self.board[yf][xf]
+            return GameState(new_board, self.curr_player)
 
     def evaluate(self, player):
         # Given a specific board state, evaluate it for the player passed as parameter
@@ -185,8 +235,7 @@ class GameState:
             return not (self.board[source_y][source_x].has_wall_right() and self.board[source_y][source_x+1].has_wall_right() and
                          self.board[source_y][source_x+1].has_wall_left() and self.board[source_y][source_x+2].has_wall_left())
 
-
-
+        
 
     def print_board(self):
         # print("   0  1  2  3  4  5 --> X")z
