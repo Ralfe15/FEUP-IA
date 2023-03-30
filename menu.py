@@ -1,0 +1,159 @@
+import pygame
+import game
+import board
+import os
+
+class Menu:
+    def __init__(self, screen):
+
+        self.menu_nr = 1
+        self.screen = screen
+        self.gamemode = 0
+        self.difficulty_selected = 0
+
+        self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
+        self.RED = (255, 80, 80)
+        self.GREEN = (111, 192, 99)
+        self.BLUE = (90, 202, 235)
+
+        self.SCREEN_WIDTH = 1024
+        self.SCREEN_HEIGHT = 768
+
+        self.LOGO = pygame.image.load(os.path.join('assets', 'LESS_logo.png'))
+        self.LOGO = pygame.transform.scale(self.LOGO, (int(self.LOGO.get_width()/5), int(self.LOGO.get_height()/5)))
+
+        self.back_arrow = pygame.image.load(os.path.join('assets', 'back_arrow.png'))
+
+        self.font = pygame.font.SysFont('arialBlack', 30)
+
+        self.draw_menu()
+
+        self.board = board.Board(self.screen)
+        
+
+    def create_rect(self, text, x, y, color):
+        rect = text.get_rect()
+        rect.width += 10
+        rect.height += 10
+        rect.center = (x, y)
+
+        pygame.draw.rect(self.screen, color, rect, 2, 10)
+        return rect
+    
+
+    def draw_menu(self):
+        if self.menu_nr == 1:
+            self.screen.fill(self.WHITE)
+
+            play_buttonPvP = self.font.render('Player vs Player', True, self.RED)
+            play_buttonPvAI = self.font.render('Player vs AI', True, self.RED)
+            play_buttonAIvAI = self.font.render('AI vs AI', True, self.RED)
+
+            self.button1_rect = self.create_rect(play_buttonPvP, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3+50, self.RED)
+            self.button2_rect = self.create_rect(play_buttonPvAI, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3 + 150, self.RED)
+            self.button3_rect = self.create_rect(play_buttonAIvAI, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3 + 250, self.RED)
+            
+            self.screen.blit(play_buttonPvP, (self.button1_rect.x + 5, self.button1_rect.y + 5))
+            self.screen.blit(play_buttonPvAI, (self.button2_rect.x + 5, self.button2_rect.y + 5))
+            self.screen.blit(play_buttonAIvAI, (self.button3_rect.x + 5, self.button3_rect.y + 5))
+
+            logo_rect = self.LOGO.get_rect()
+            logo_rect.center = (self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2 - 200)
+
+            self.screen.blit(self.LOGO, logo_rect)
+
+            pygame.display.update()
+
+        elif self.menu_nr == 2:
+            self.screen.fill(self.WHITE)
+
+            back_arrow_rect = self.back_arrow.get_rect()
+            back_arrow_rect.center = (30, 40)
+
+            self.screen.blit(self.back_arrow, back_arrow_rect)
+
+            #Choose difficulty text
+            difficulty_text = self.font.render('Choose difficulty', True, self.BLACK)
+            difficulty_text_rect = difficulty_text.get_rect()
+            difficulty_text_rect.center = (self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3-100)
+            self.screen.blit(difficulty_text, difficulty_text_rect)
+
+            #Select difficulty
+            easy_button = self.font.render('Easy', True, self.GREEN)
+            medium_button = self.font.render('Medium', True, self.BLUE)
+            hard_button = self.font.render('Hard', True, self.RED)
+
+            self.button1_rect = self.create_rect(easy_button, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3+50, self.GREEN)
+            self.button2_rect = self.create_rect(medium_button, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3 + 150, self.BLUE)
+            self.button3_rect = self.create_rect(hard_button, self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/3 + 250, self.RED)
+
+            self.screen.blit(easy_button, (self.button1_rect.x + 5, self.button1_rect.y + 5))
+            self.screen.blit(medium_button, (self.button2_rect.x + 5, self.button2_rect.y + 5))
+            self.screen.blit(hard_button, (self.button3_rect.x + 5, self.button3_rect.y + 5))
+
+            pygame.display.update()
+    
+    def update_menu(self, event):
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.menu_nr == 1:
+                    if self.button1_rect.collidepoint(event.pos):
+                        return self.start_pvp()
+
+                    elif self.button2_rect.collidepoint(event.pos):
+                        self.menu_nr = 2
+                        self.draw_menu()
+
+                    elif self.button3_rect.collidepoint(event.pos):
+                        return self.start_aivai()
+
+                elif self.menu_nr == 2:
+                    if self.back_arrow.get_rect().collidepoint(event.pos):
+                        self.menu_nr = 1
+                        self.draw_menu()
+                    elif self.button1_rect.collidepoint(event.pos):
+                        self.difficulty_selected = 0
+                        return self.start_pvai()
+                    elif self.button2_rect.collidepoint(event.pos):
+                        self.difficulty_selected = 1
+                        return self.start_pvai()
+                    elif self.button3_rect.collidepoint(event.pos):
+                        self.difficulty_selected = 2
+                        return self.start_pvai()
+            return None
+
+
+    def check_back_button(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.back_arrow.get_rect().collidepoint(event.pos):
+                    self.menu_nr = 1
+                    self.gamemode = 0
+                    self.board = board.Board(self.screen)
+                    self.draw_menu()
+
+    
+
+    def start_pvp(self):
+        self.menu_nr = 0
+        self.gamemode = 1
+
+        self.game = game.Game(2, self.board)
+        return self.game
+    
+    def start_pvai(self):
+        self.menu_nr = 0
+        self.gamemode = 2
+
+        self.game = game.Game(1, self.board)
+        return self.game
+    
+    def start_aivai(self):
+        self.menu_nr = 0
+        self.gamemode = 3
+
+        self.game = game.Game(0, self.board)
+        return self.game
+    

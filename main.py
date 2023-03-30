@@ -1,24 +1,56 @@
+import menu
 import game
+import board
+import pygame
+import os
+import sys
 
 if __name__ == '__main__':
-    g1 = game.Game(1)
-    # g1.state.print_board()
 
-    # print(g1.state.get_all_moves(1))
-    # g1.state.print_board()
-    # print(g1.state.p1_pieces)
-    # print(g1.state.evaluate(1))
-    # g1.state = g1.state.move_piece(0, 1, 2, 1)
-    print(g1.state.get_all_moves(1))
-    terminal_states = g1.state.get_terminal_states(2)
-    for i in terminal_states:
-        i.print_board()
-        print("===============")
-        print(i.p1_pieces)
-        print("===============")
-        
-    # print(g1.state.evaluate(1))
+    # Initialize Pygame
+    pygame.init()
 
-    # g1.state.print_board()
+    # Set the width and height of the screen [width, height]
+    SCREEN_WIDTH = 1024
+    SCREEN_HEIGHT = 768
+    FPS = 60
 
-    # print(g1.state.get_all_moves(1))
+    size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+    screen = pygame.display.set_mode(size)
+
+    # Set the title of the window
+    pygame.display.set_caption("LESS")
+
+    menu = menu.Menu(screen)
+
+    pygame.display.update()
+
+    # Used to manage how fast the screen updates
+    clock = pygame.time.Clock()
+
+    # Loop until the user clicks the close button
+    done = False
+    g1 =None
+
+   #Main loop
+    while not done:
+        clock.tick(FPS)
+
+        # --- Main event loop
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                done = True
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if menu.gamemode == 0:
+                    g1 = menu.update_menu(event)
+                
+                if not g1 is None:
+                    menu.check_back_button(event)
+                    g1.state.board.update_board(g1, event)
+    
+
+    # Close the window and quit.
+    pygame.quit()
+
