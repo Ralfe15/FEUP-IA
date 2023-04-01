@@ -30,9 +30,9 @@ if __name__ == '__main__':
 
     # Loop until the user clicks the close button
     done = False
-    g1 =None
+    g1 = None
 
-   #Main loop
+    # Main loop
     while not done:
         clock.tick(FPS)
 
@@ -45,12 +45,10 @@ if __name__ == '__main__':
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if menu.gamemode == 0:
                     g1 = menu.update_menu(event)
-                
+
                 if not g1 is None:
                     menu.check_back_button(event)
                     g1.state.board.update_board(g1, event)
-    
 
     # Close the window and quit.
     pygame.quit()
-

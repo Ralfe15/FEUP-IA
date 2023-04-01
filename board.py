@@ -3,7 +3,6 @@ import menu
 import pygame
 import os
 
-
 # Define colors
 WHITE = (255, 255, 255)
 BASE_X = 175
@@ -30,7 +29,6 @@ LEFT_WALL = pygame.transform.rotate(RIGHT_WALL, 180)
 UP_WALL = pygame.transform.rotate(RIGHT_WALL, 90)
 
 
-
 class Board:
     def __init__(self, screen, board_size=6):
         self.screen = screen
@@ -54,14 +52,15 @@ class Board:
                     tile = game.Tile(1, (i, j), pygame.Rect(x, y, WIDTH, HEIGHT))
                     self.board[i][j] = tile
                     self.p1_pieces.append(tile)
-                elif (i == self.BOARD_SIZE-2 and j == self.BOARD_SIZE-2) or (i == self.BOARD_SIZE-2 and j == self.BOARD_SIZE-1) or (i == self.BOARD_SIZE-1 and j == self.BOARD_SIZE-2) or (i == self.BOARD_SIZE-1 and j == self.BOARD_SIZE-1):
+                elif (i == self.BOARD_SIZE - 2 and j == self.BOARD_SIZE - 2) or (
+                        i == self.BOARD_SIZE - 2 and j == self.BOARD_SIZE - 1) or (
+                        i == self.BOARD_SIZE - 1 and j == self.BOARD_SIZE - 2) or (
+                        i == self.BOARD_SIZE - 1 and j == self.BOARD_SIZE - 1):
                     tile = game.Tile(2, (i, j), pygame.Rect(x, y, WIDTH, HEIGHT))
-                    self.board[i][j] = tile  
+                    self.board[i][j] = tile
                     self.p2_pieces.append(tile)
                 else:
                     self.board[i][j] = game.Tile(0, (i, j), pygame.Rect(x, y, WIDTH, HEIGHT))
-
-
 
     def draw_window(self, game=None, selected_tile=False):
 
@@ -69,7 +68,8 @@ class Board:
 
         if selected_tile:
             possible_moves = game.state.get_moves_for_tile(selected_tile)
-            
+            possible_moves = [i[0] for i in possible_moves]
+
         self.screen.fill(WHITE)
 
         back_arrow_rect = BACK_ARROW.get_rect()
@@ -77,7 +77,6 @@ class Board:
 
         self.screen.blit(BACK_ARROW, back_arrow_rect)
 
-        
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 x = i * 115 + BASE_X
@@ -98,21 +97,25 @@ class Board:
                     self.screen.blit(LEFT_WALL, (x, y))
 
                 if self.board[i][j].value == 1:
-                    if self.board[i][j].selected: self.screen.blit(PLAYER1_SELECTED, (x +27-HALF_SIZE_DIFF, y +27-HALF_SIZE_DIFF))
-                    else: self.screen.blit(PLAYER1, (x +27, y +27))
-                
+                    if self.board[i][j].selected:
+                        self.screen.blit(PLAYER1_SELECTED, (x + 27 - HALF_SIZE_DIFF, y + 27 - HALF_SIZE_DIFF))
+                    else:
+                        self.screen.blit(PLAYER1, (x + 27, y + 27))
+
                 if self.board[i][j].value == 2:
-                    if self.board[i][j].selected: self.screen.blit(PLAYER2_SELECTED, (x +27-HALF_SIZE_DIFF, y +27-HALF_SIZE_DIFF))
-                    else: self.screen.blit(PLAYER2, (x +27, y +27))
-                
+                    if self.board[i][j].selected:
+                        self.screen.blit(PLAYER2_SELECTED, (x + 27 - HALF_SIZE_DIFF, y + 27 - HALF_SIZE_DIFF))
+                    else:
+                        self.screen.blit(PLAYER2, (x + 27, y + 27))
+
                 if self.board[i][j] in possible_moves:
                     if selected_tile.value == 1:
-                        self.screen.blit(PLAYER1_POSSIBLE_MOVE, (x +27, y +27))
+                        self.screen.blit(PLAYER1_POSSIBLE_MOVE, (x + 27, y + 27))
                     else:
-                        self.screen.blit(PLAYER2_POSSIBLE_MOVE, (x +27, y +27))
+                        self.screen.blit(PLAYER2_POSSIBLE_MOVE, (x + 27, y + 27))
 
         pygame.display.update()
-    
+
     def tile_clicked(self, event):
 
         if event.type != pygame.MOUSEBUTTONDOWN:
@@ -122,54 +125,53 @@ class Board:
             for j in range(len(self.board[i])):
                 if self.board[i][j].rect.collidepoint(event.pos):
                     return self.board[i][j]
-                
+
         return None
-    
+
     def get_selected_tile(self):
         for i in range(len(self.p1_pieces)):
 
             if self.p1_pieces[i].selected:
                 return self.p1_pieces[i]
-            
+
             elif self.p2_pieces[i].selected:
                 return self.p2_pieces[i]
-            
+
         return False
 
-
     def update_board(self, game, event):
-        
+
         tile = self.tile_clicked(event)
         if not tile: return
-        
+
         if game.state.curr_player == 1:
             if tile in self.p1_pieces:
                 for i in self.p1_pieces:
                     if i != tile:
                         i.selected = False
-                    else: i.selected = not i.selected
+                    else:
+                        i.selected = not i.selected
 
         if game.state.curr_player == 2:
             if tile in self.p2_pieces:
                 for i in self.p2_pieces:
                     if i != tile:
                         i.selected = False
-                    else: i.selected = not i.selected
-
+                    else:
+                        i.selected = not i.selected
 
         selected_tile = self.get_selected_tile()
 
         if selected_tile:
             possible_moves = game.state.get_moves_for_tile(selected_tile)
+            possible_tiles = [i[0] for i in possible_moves]
 
-            if tile in possible_moves:
-                game.state.move_piece(selected_tile.index[0], selected_tile.index[1], tile.index[0], tile.index[1])
+            if tile in possible_tiles:
+                for k in possible_moves:
+                    if k[0] == tile:
+                        cost = k[1]
+                game.state.move_piece(selected_tile.index[0], selected_tile.index[1], tile.index[0], tile.index[1],
+                                      cost)
                 selected_tile.selected = False
 
-
         self.draw_window(game, selected_tile)
-        
-
-    
-    
-    
