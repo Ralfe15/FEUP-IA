@@ -46,7 +46,7 @@ if __name__ == '__main__':
                 if menu.gamemode == 0:
                     g1 = menu.update_menu(event)
 
-                if not g1 is None:
+                if g1 is not None:
                     menu.check_match_end(event)
                     g1.state.board.update_board(g1, event)
 

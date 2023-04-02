@@ -99,43 +99,46 @@ class Menu:
     
     def update_menu(self, event):
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if self.menu_nr == 1:
-                    if self.button1_rect.collidepoint(event.pos):
-                        return self.start_pvp()
+        if event.type != pygame.MOUSEBUTTONDOWN:
+            return
+        if event.button == 1:
+            if self.menu_nr == 1:
+                if self.button1_rect.collidepoint(event.pos):
+                    return self.start_pvp()
 
-                    elif self.button2_rect.collidepoint(event.pos):
-                        self.menu_nr = 2
-                        self.draw_menu()
+                elif self.button2_rect.collidepoint(event.pos):
+                    self.menu_nr = 2
+                    self.draw_menu()
 
-                    elif self.button3_rect.collidepoint(event.pos):
-                        return self.start_aivai()
+                elif self.button3_rect.collidepoint(event.pos):
+                    return self.start_ai_vs_ai()
 
-                elif self.menu_nr == 2:
-                    if self.back_arrow.get_rect().collidepoint(event.pos):
-                        self.menu_nr = 1
-                        self.draw_menu()
-                    elif self.button1_rect.collidepoint(event.pos):
-                        self.difficulty_selected = 0
-                        return self.start_pvai()
-                    elif self.button2_rect.collidepoint(event.pos):
-                        self.difficulty_selected = 1
-                        return self.start_pvai()
-                    elif self.button3_rect.collidepoint(event.pos):
-                        self.difficulty_selected = 2
-                        return self.start_pvai()
-            return None
+            elif self.menu_nr == 2:
+                if self.back_arrow.get_rect().collidepoint(event.pos):
+                    self.menu_nr = 1
+                    self.draw_menu()
+                elif self.button1_rect.collidepoint(event.pos):
+                    self.difficulty_selected = 0
+                    return self.start_player_vs_ai()
+                elif self.button2_rect.collidepoint(event.pos):
+                    self.difficulty_selected = 1
+                    return self.start_player_vs_ai()
+                elif self.button3_rect.collidepoint(event.pos):
+                    self.difficulty_selected = 2
+                    return self.start_player_vs_ai()
+        return None
 
 
     def check_match_end(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if self.back_arrow.get_rect().collidepoint(event.pos):
-                    self.menu_nr = 1
-                    self.gamemode = 0
-                    self.board = board.Board(self.screen)
-                    self.draw_menu()
+        if (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.back_arrow.get_rect().collidepoint(event.pos)
+        ):
+            self.menu_nr = 1
+            self.gamemode = 0
+            self.board = board.Board(self.screen)
+            self.draw_menu()
 
         if self.game.state.game_over != 0:
             self.menu_nr = 1
@@ -161,23 +164,17 @@ class Menu:
     
 
     def start_pvp(self):
-        self.menu_nr = 0
-        self.gamemode = 1
-
-        self.game = game.Game(2, self.board)
-        return self.game
+        return self.initialize_game_with_mode(1, 2)
     
-    def start_pvai(self):
-        self.menu_nr = 0
-        self.gamemode = 2
-
-        self.game = game.Game(1, self.board)
-        return self.game
+    def start_player_vs_ai(self):
+        return self.initialize_game_with_mode(2, 1)
     
-    def start_aivai(self):
-        self.menu_nr = 0
-        self.gamemode = 3
+    def start_ai_vs_ai(self):
+        return self.initialize_game_with_mode(3, 0)
 
-        self.game = game.Game(0, self.board)
+    def initialize_game_with_mode(self, gamemode, side):
+        self.menu_nr = 0
+        self.gamemode = gamemode
+        self.game = game.Game(side, self.board)
         return self.game
     
