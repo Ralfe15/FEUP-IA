@@ -1,10 +1,14 @@
-import game
-import menu
 import pygame
+import game
 import os
+import menu
+import sys
 
 # Define colors
 WHITE = (255, 255, 255)
+BLACK = (80, 80, 80)
+BLUE = (111,205,244)
+RED = (242, 107, 102)
 BASE_X = 175
 BASE_Y = 45
 
@@ -14,10 +18,14 @@ HALF_SIZE_DIFF = 5.2
 PLAYER1 = pygame.image.load(os.path.join('assets', 'player1.png'))
 PLAYER1_SELECTED = pygame.image.load(os.path.join('assets', 'player1_selected.png'))
 PLAYER1_POSSIBLE_MOVE = pygame.image.load(os.path.join('assets', 'p1_possible_move.png'))
+PLAYER1_USER_UNSELECTED = pygame.image.load(os.path.join('assets', 'p1_unselected.png'))
+PLAYER1_USER_SELECTED = pygame.image.load(os.path.join('assets', 'p1_selected.png'))
 
 PLAYER2 = pygame.image.load(os.path.join('assets', 'player2.png'))
 PLAYER2_SELECTED = pygame.image.load(os.path.join('assets', 'player2_selected.png'))
 PLAYER2_POSSIBLE_MOVE = pygame.image.load(os.path.join('assets', 'p2_possible_move.png'))
+PLAYER2_USER_UNSELECTED = pygame.image.load(os.path.join('assets', 'p2_unselected.png'))
+PLAYER2_USER_SELECTED = pygame.image.load(os.path.join('assets', 'p2_selected.png'))
 
 BACK_ARROW = pygame.image.load(os.path.join('assets', 'back_arrow.png'))
 
@@ -35,6 +43,8 @@ class Board:
         self.menu = menu
         self.p1_pieces = []
         self.p2_pieces = []
+
+        self.FONT = pygame.font.SysFont('arialBlack', 30)
 
         self.BOARD_SIZE = board_size
 
@@ -72,10 +82,22 @@ class Board:
 
         self.screen.fill(WHITE)
 
+        #Draw back arrow
         back_arrow_rect = BACK_ARROW.get_rect()
         back_arrow_rect.center = (30, 40)
-
         self.screen.blit(BACK_ARROW, back_arrow_rect)
+
+        #Draw player icons
+        if game.state.curr_player == 1:
+            self.screen.blit(PLAYER1_USER_SELECTED, (40, 90))
+            self.screen.blit(PLAYER2_USER_UNSELECTED, (890, 550))
+            credits = self.FONT.render(f"{game.state.move_credits} / 3", True, RED)
+            self.screen.blit(credits, (50, 200))
+        else:
+            self.screen.blit(PLAYER1_USER_UNSELECTED, (40, 90))
+            self.screen.blit(PLAYER2_USER_SELECTED, (890, 550))
+            credits = self.FONT.render(f"{game.state.move_credits} / 3", True, BLUE)
+            self.screen.blit(credits, (900, 660))
 
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
@@ -144,6 +166,8 @@ class Board:
         tile = self.tile_clicked(event)
         if not tile: return
 
+        if game.state.game_over != 0: return
+
         if game.state.curr_player == 1:
             if tile in self.p1_pieces:
                 for i in self.p1_pieces:
@@ -172,6 +196,7 @@ class Board:
                         cost = k[1]
                 game.state.move_piece(selected_tile.index[0], selected_tile.index[1], tile.index[0], tile.index[1],
                                       cost)
+                game.state.is_game_over()
                 selected_tile.selected = False
 
         self.draw_window(game, selected_tile)

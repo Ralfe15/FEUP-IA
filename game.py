@@ -257,7 +257,8 @@ class GameState:
                                 # 1 cost (explore one more layer)
                                 second_intermediate_move = first_intermediate_move + [((new_piece_coordinate[0],
                                                                                         new_piece_coordinate[1]), (
-                                                                                       new_move[0][0], new_move[0][1]))]
+                                                                                           new_move[0][0],
+                                                                                           new_move[0][1]))]
 
                                 # Make second 1 cost move
                                 self.move_piece(new_piece_coordinate[0], new_piece_coordinate[1], new_move[0][0],
@@ -310,12 +311,15 @@ class GameState:
         # new_board.board[yf][xf],new_board.board[yi][xi] = self.board.board[yi][xi], self.board.board[yf][xf]
         # return GameState(new_board, self.curr_player)
 
-    def move_piece_generate_new_state(self, xi, yi, xf, yf):
-        new_state = GameState(self.board, self.curr_player, self.move_credits)
-        new_state.board = copy.deepcopy(self.board)
-        new_state.board.board[xf][yf].value = new_state.board.board[xi][yi].value
-        new_state.board.board[xi][yi].value = 0
-        return new_state
+    def is_game_over(self):
+        p1_corner = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        p2_corner = [(BOARD_SIZE - 1, BOARD_SIZE - 1), (BOARD_SIZE - 1, BOARD_SIZE - 2),
+                     (BOARD_SIZE - 2, BOARD_SIZE - 1), (BOARD_SIZE - 2, BOARD_SIZE - 2)]
+
+        if all(coord.index in p2_corner for coord in self.board.p1_pieces):
+            self.game_over = 1
+        elif all(coord.index in p1_corner for coord in self.board.p2_pieces):
+            self.game_over = 2
 
     def evaluate(self, player):
         # Given a specific board state, evaluate it for the player passed as parameter

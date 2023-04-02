@@ -47,7 +47,7 @@ if __name__ == '__main__':
                     g1 = menu.update_menu(event)
 
                 if not g1 is None:
-                    menu.check_back_button(event)
+                    menu.check_match_end(event)
                     g1.state.board.update_board(g1, event)
 
     # Close the window and quit.
