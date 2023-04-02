@@ -172,9 +172,9 @@ class Menu:
     def start_ai_vs_ai(self):
         return self.initialize_game_with_mode(3, 0)
 
-    def initialize_game_with_mode(self, gamemode, side):
+    def initialize_game_with_mode(self, gamemode, num_of_players):
         self.menu_nr = 0
         self.gamemode = gamemode
-        self.game = game.Game(side, self.board)
+        self.game = game.Game(num_of_players, self.board)
         return self.game
     
