@@ -16,6 +16,8 @@ class Menu:
         self.RED = (255, 80, 80)
         self.GREEN = (111, 192, 99)
         self.BLUE = (90, 202, 235)
+        self.USER_BLUE = (111,205,244)
+        self.USER_RED = (242, 107, 102)
 
         self.SCREEN_WIDTH = 1024
         self.SCREEN_HEIGHT = 768
@@ -26,6 +28,7 @@ class Menu:
         self.back_arrow = pygame.image.load(os.path.join('assets', 'back_arrow.png'))
 
         self.font = pygame.font.SysFont('arialBlack', 30)
+        self.winner_font = pygame.font.SysFont('arialBlack', 80)
 
         self.draw_menu()
 
@@ -125,7 +128,7 @@ class Menu:
             return None
 
 
-    def check_back_button(self, event):
+    def check_match_end(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 if self.back_arrow.get_rect().collidepoint(event.pos):
@@ -134,6 +137,27 @@ class Menu:
                     self.board = board.Board(self.screen)
                     self.draw_menu()
 
+        if self.game.state.game_over != 0:
+            self.menu_nr = 1
+            self.gamemode = 0
+            self.draw_winner(self.game.state.game_over)
+            self.board = board.Board(self.screen)
+            self.draw_menu()
+
+    def draw_winner(self, winner):
+        if winner == 1:
+            winner_text = self.font.render('Player 1 wins!', True, self.USER_RED)
+        elif winner == 2:
+            winner_text = self.font.render('Player 2 wins!', True, self.USER_BLUE)
+
+        winner_text_rect = winner_text.get_rect()
+        winner_text_rect.center = (self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2)
+
+        self.screen.blit(winner_text, winner_text_rect)
+
+        pygame.display.update()
+
+        pygame.time.wait(3000)
     
 
     def start_pvp(self):

@@ -66,6 +66,9 @@ class GameState:
         self.curr_player = curr_player
         self.move_credits = move_credits
 
+        # Implementem essa variável, a função para declarar o vencedor já está funcionando com base essa variável
+        self.game_over = 0 # 0 = game not over, 1 = player 1 wins, 2 = player 2 wins
+
     # Get available moves for piece at coords (x, y)
     # Returns list of available moves [[(x, y), cost]]
     # Legal moves are: moving to an empty space left/right/up/down, leaping one piece to an empty space
