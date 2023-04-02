@@ -154,6 +154,31 @@ class GameState:
         # Return only the moves with the desired cost
         return [move for move in moves if move[1] == cost]
 
+    def minimax(self, depth, max_player):
+        if depth == 0 or self.state.game_over != 0:
+            return self.evaluate(self.curr_player)
+
+        best_move = None
+        if max_player:
+            maxEval = float('-inf')
+            for move in self.get_terminal_states(1):
+                evaluation = self.minimax(depth-1, False)[0]
+                maxEval = max(maxEval, evaluation)
+                if maxEval < evaluation:
+                    maxEval = evaluation
+                    best_move = move
+            return maxEval, best_move
+        else:
+            minEval = float('inf')
+            for move in self.get_terminal_states(2):
+                evaluation = self.minimax(move, depth-1, True)[0]
+                minEval = min(minEval, evaluation)
+                if minEval > evaluation:
+                    minEval = evaluation
+                    best_move = move
+            return minEval, best_move
+
+
     def get_all_moves(self, player):
         all_moves = {}
         if player == 1:
@@ -194,102 +219,102 @@ class GameState:
         return possible_moves
 
     def get_terminal_states(self, player):
-        # Returns a list of list, containing move sequences that use all 3 "move credits". Can be used as a stack and
-        # pop moves to get order
-        # The format is: [[((source_x1, source_y1), (dest_x1, dest_y1)), ((source_x2, source_y2), (dest_x2, dest_y2))]]
+        """
+        Returns a list of move sequences that use all 3 "move credits" for the given player.
+        """
         move_sequences = []
         moves = self.get_all_moves(player)
-        for piece_coordinate, moves in moves.items():
-            for move in moves:
+
+        for piece_coordinate, piece_moves in moves.items():
+            for move in piece_moves:
                 if move[1] == 3:
                     # If move is a 3 cost, we are in a terminal state
                     move_sequences.append(
                         [(piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1])])
 
                 elif move[1] == 2:
-                    # If a move is a 2 cost, we need to explore all possible one cost moves after it
                     intermediate_move = [
-                        ((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))]
-
-                    # Make move
-                    self.move_piece(
-                        piece_coordinate[0], piece_coordinate[1], move[0][0], move[0][1])
-
-                    # Explore all possible new 1 cost moves
-                    for new_piece_coordinate, new_moves in self.get_all_moves(player).items():
-                        move_sequences.extend(
-                            intermediate_move
-                            + [
-                                (
-                                    (
-                                        new_piece_coordinate[0],
-                                        new_piece_coordinate[1],
-                                    ),
-                                    (new_move[0][0], new_move[0][1]),
-                                )
-                            ]
-                            for new_move in new_moves
-                            if new_move[1] == 1
-                        )
-                    # Undo move
-                    self.move_piece(move[0][0], move[0][1],
-                                    piece_coordinate[0], piece_coordinate[1])
+                        (piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1])]
+                    new_moves = self.explore_one_cost_moves(
+                        piece_coordinate, move[0], player)
+                    move_sequences.extend(self.generate_move_sequences(
+                        intermediate_move, new_moves, player))
 
                 elif move[1] == 1:
-                    # If a move is a 1 cost, we need to explore all possible 2 cost moves after it and two 1 cost moves
-                    # after it too
-                    first_intermediate_move = [
-                        ((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))]
+                    intermediate_move = [
+                        (piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1])]
+                    new_moves = self.explore_two_and_one_cost_moves(
+                        piece_coordinate, move[0], player)
+                    move_sequences.extend(self.generate_move_sequences(
+                        intermediate_move, new_moves, player))
 
-                    # Make move
-                    self.move_piece(
-                        piece_coordinate[0], piece_coordinate[1], move[0][0], move[0][1])
+        return move_sequences
 
-                    # Explore all possible new 1 and 2 cost moves (2 cost are terminals)
-                    for new_piece_coordinate, new_moves in self.get_all_moves(player).items():
-                        for new_move in new_moves:
-                            if new_move[1] == 2:
-                                # 2 cost move (terminal)
-                                move_sequences.append(first_intermediate_move + [((new_piece_coordinate[0],
-                                                                                   new_piece_coordinate[1]),
-                                                                                  (new_move[0][0], new_move[0][1]))])
+    def explore_one_cost_moves(self, piece_coordinate, move, player):
+        """
+        Explores all possible one cost moves from the current move.
+        """
+        self.move_piece(piece_coordinate[0],
+                        piece_coordinate[1], move[0], move[1])
+        new_moves = self.get_all_moves(player)
+        one_cost_moves = {}
+        for new_piece_coordinate, moves in new_moves.items():
+            for new_move in moves:
+                if new_move[1] == 1:
+                    one_cost_moves[(new_piece_coordinate[0], new_piece_coordinate[1])] = (
+                        (new_move[0][0], new_move[0][1]), new_move[1])
 
-                            if new_move[1] == 1:
-                                # 1 cost (explore one more layer)
-                                second_intermediate_move = first_intermediate_move + [((new_piece_coordinate[0],
-                                                                                        new_piece_coordinate[1]), (
-                                                                                           new_move[0][0],
-                                                                                           new_move[0][1]))]
+        self.move_piece(move[0], move[1],
+                        piece_coordinate[0], piece_coordinate[1])
+        return one_cost_moves
 
-                                # Make second 1 cost move
-                                self.move_piece(new_piece_coordinate[0], new_piece_coordinate[1], new_move[0][0],
-                                                new_move[0][1])
+    def explore_two_and_one_cost_moves(self, piece_coordinate, move, player):
+        """
+        Explores all possible two cost moves and corresponding one cost moves from the current move.
+        """
+        two_and_one_cost_moves = {}
+        self.move_piece(piece_coordinate[0],
+                        piece_coordinate[1], move[0], move[1])
+        new_moves = self.get_all_moves(player)
+        for new_piece_coordinate, moves in new_moves.items():
+            for new_move in moves:
+                if new_move[1] == 2:
+                    # Found a terminal state
+                    two_and_one_cost_moves[(new_piece_coordinate[0], new_piece_coordinate[1])] = (
+                        (new_move[0][0], new_move[0][1]), new_move[1])
+                elif new_move[1] == 1:
+                    intermediate_move = [
+                        (new_piece_coordinate[0], new_piece_coordinate[1]), (new_move[0][0], new_move[0][1])]
+                    one_cost_moves = self.explore_one_cost_moves(
+                        new_piece_coordinate, new_move[0], player)
+                    two_and_one_cost_moves |= {
+                        intermediate_move + (one_cost_move,)
+                        for one_cost_move in one_cost_moves
+                    }
 
-                                for new_layer2_piece_coordinate, new_layer2_moves in self.get_all_moves(player).items():
-                                    move_sequences.extend(
-                                        second_intermediate_move
-                                        + [
-                                            (
-                                                (
-                                                    new_layer2_piece_coordinate[0],
-                                                    new_layer2_piece_coordinate[1],
-                                                ),
-                                                (
-                                                    new_layer2_move[0][0],
-                                                    new_layer2_move[0][1],
-                                                ),
-                                            )
-                                        ]
-                                        for new_layer2_move in new_layer2_moves
-                                        if new_layer2_move[1] == 1
-                                    )
-                                # Undo second one cost move
-                                self.move_piece(new_move[0][0], new_move[0][1], new_piece_coordinate[0],
-                                                new_piece_coordinate[1])
+        self.move_piece(move[0], move[1],
+                        piece_coordinate[0], piece_coordinate[1])
+        return two_and_one_cost_moves
 
-                    # Undo first layer move
-                    self.move_piece(move[0][0], move[0][1],
-                                    piece_coordinate[0], piece_coordinate[1])
+    def generate_move_sequences(self, intermediate_move, new_moves, player):
+        """
+        Generates all possible move sequences from the given intermediate move and new moves.
+        """
+        move_sequences = []
+        for new_piece_coordinate, move in new_moves.items():
+            if move[1] == 2:
+                # Found a terminal state
+                move_sequences.append(
+                    intermediate_move + [(new_piece_coordinate[0], new_piece_coordinate[1]), (move[0][0], move[0][1])])
+            elif move[1] == 1:
+                second_intermediate_move = intermediate_move + \
+                    [(new_piece_coordinate[0], new_piece_coordinate[1]),
+                     (move[0][0], move[0][1])]
+                one_cost_moves = self.explore_one_cost_moves(
+                    new_piece_coordinate, move[0], player)
+                move_sequences.extend(self.generate_move_sequences(
+                    second_intermediate_move, one_cost_moves, player))
+
         return move_sequences
 
     def move_piece(self, xi, yi, xf, yf, cost=0):
