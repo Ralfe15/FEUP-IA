@@ -166,7 +166,6 @@ class Board:
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 if self.board[i][j].rect.collidepoint(event.pos):
-                    print(f"this is {self.board[i][j]} ")
                     return self.board[i][j]
 
         return None
@@ -210,8 +209,6 @@ class Board:
         Selects a ai tile and moves to one of its possible positions.
         """
         _,best_moves = game.state.minimax(1,True,alpha = float('-inf'),beta =float('inf'))
-        
-        print(best_moves)
         pieces = self.p1_pieces if game.state.curr_player == 1 else self.p2_pieces
         #while there is some movement
         while best_moves:
@@ -224,13 +221,13 @@ class Board:
                         if (isinstance(possible_move, int)):
                             continue
                         if  best_moves[0][1] == possible_move[0].index:
+                                time.sleep(0.5)
                                 self.select_or_deselect_tiles(game, possible_move[0])
                                 self.make_move(game, possible_move[0], piece)
                                 self.select_or_deselect_tiles(game, best_moves[0][0])
                                 self.update_board_ai(game,possible_move[0])
                                 best_moves.pop(0)
                                 if len(best_moves) == 0:return
-                                print(game.state.move_credits)
                                 break
             
     def select_or_deselect_tiles(self, game, tile):
