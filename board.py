@@ -205,21 +205,19 @@ class Board:
         """
         Selects a ai tile and moves to one of its possible positions.
         """
-        _,best_moves = game.state.minimax(2,True)
+        _,best_moves = game.state.minimax(2,True,alpha = float('-inf'),beta =float('inf'))
         print(best_moves)
-        for move in best_moves:
-            print(move)
         for piece in pieces:
             for move in best_moves:
-                if move[0] == piece and move[1] != piece:
-                    return piece, move[1]
-        while True:
-            selected_tile = pieces[random.randint(0, 3)]
-            if possible_moves := game.state.get_moves_for_tile(selected_tile):
-                tile = random.choice([i[0] for i in possible_moves])
-                break
-        return selected_tile, tile
-
+                
+                if move[0] == piece.index and move[1] != piece.index:
+                    for possible_move in game.state.get_moves_for_tile(piece)[0]:
+                        print(possible_move.index) 
+                        if move[1] == possible_move.index:
+                            return piece,possible_move
+                       
+              
+            
     def select_or_deselect_tiles(self, game, tile):
         """
         Selects/Deselects tiles for movement.

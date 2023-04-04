@@ -22,7 +22,7 @@ MOVE_CREDITS = 3
 #     return board
 
 def manhattan_distance(coords_piece, player):
-   
+
     if player == 2:
         return coords_piece.index[0] + coords_piece.index[1]
     elif player == 1:
@@ -168,86 +168,89 @@ class GameState:
         print("Player 1 =", player1_pos)
         print("Player 2 =", player2_pos)
 
-    def minimax(self, depth, max_player, move_seq=None):
+    def minimax(self, depth, max_player, move_seq=None, alpha = float('-inf'), beta = float('inf')):
         if depth == 0 or self.game_over != 0:
-            if max_player:
-                evaluate = self.evaluate(2)
-                mseq = move_seq
-            else:
-                evaluate = self.evaluate(1)
-                mseq = move_seq
+            evaluate = self.evaluate(2) if max_player else self.evaluate(1)
+            mseq = move_seq
             return evaluate, mseq
 
             # return self.evaluate(self.curr_player)
         best_moves = None
         print(f"Minimax with {depth} and {max_player} and {move_seq}")
         if max_player == True:
-            print("ENTERING MAX PLAYER")
-            self.gameprint()
+            # print("ENTERING MAX PLAYER")
+            # self.gameprint()
             saved_posa = [
                 (piece.index[0], piece.index[1]) for piece in self.board.p2_pieces
             ]
             print(f"SAVED POS ={saved_posa}")
             maxEval = float('-inf')
             for moves in self.get_terminal_states_old(2):
-                self.gameprint()
+                # self.gameprint()
                 self.board.p2_pieces.clear()
                 for i in range(4):
                     self.board.p2_pieces.append(
                         self.board.board[saved_posa[i][0]][saved_posa[i][1]])
-                self.gameprint()
+                # self.gameprint()
 
                 for move in moves:
                     print(f"Player 2 (bot) the move is {move} in {moves}")
-                    if len(move) !=2 :
+                    if len(move) != 2:
                         self.move_piece(move[0][0], move[0][1],
-                                    move[1][0], move[1][1], player=2)
-                    self.gameprint()
+                                        move[1][0], move[1][1], player=2)
+                    # self.gameprint()
                     moves.pop()
-                evaluation = self.minimax(depth-1, False, moves)[0]
+                evaluation = self.minimax(
+                    depth-1, False, moves, alpha = alpha, beta = beta)[0]
                 print("Player 2 (bot): undoing move")
                 self.board.p2_pieces.clear()
                 for i in range(4):
                     self.board.p2_pieces.append(
                         self.board.board[saved_posa[i][0]][saved_posa[i][1]])
                 maxEval = max(maxEval, evaluation)
+                alpha = max(alpha, evaluation)
+                if beta <= alpha:
+                    break
                 if maxEval == evaluation:
                     best_moves = moves
                     print(f"best moves = {best_moves} and maxEval ={maxEval}")
             return maxEval, best_moves
         else:
             print("ENTERING MIN PLAYER")
-            self.gameprint()
+            # self.gameprint()
             saved_pos = [
                 (piece.index[0], piece.index[1]) for piece in self.board.p1_pieces
             ]
             print(f"SAVED POS ={saved_pos}")
             minEval = float('inf')
             for moves in self.get_terminal_states_old(1):
-                self.gameprint()
+                # self.gameprint()
                 self.board.p1_pieces.clear()
                 for i in range(4):
                     self.board.p1_pieces.append(
                         self.board.board[saved_pos[i][0]][saved_pos[i][1]])
                 print("AFTER GET THE BOARD BACK")
-                self.gameprint()
+                # self.gameprint()
                 for move in moves:
                     print(f"Player 1 simulation the move is {move} in {moves}")
-                    if len(move) !=2 :
+                    if len(move) != 2:
                         self.move_piece(move[0][0], move[0][1],
                                         move[1][0], move[1][1], player=1)
                     print("AFTER A MOVE PIECE AND BEFORE A EVALUATION")
                     moves.pop()
-                    self.gameprint()
-                evaluation = self.minimax(depth-1, True, moves)[0]
+                    # self.gameprint()
+                evaluation = self.minimax(depth-1, True, moves, alpha, beta)[0]
                 self.board.p1_pieces.clear()
                 for i in range(4):
                     self.board.p1_pieces.append(
                         self.board.board[saved_pos[i][0]][saved_pos[i][1]])
                 print("AFTER A EVALUATION")
-                self.gameprint()
+                # self.gameprint()
                 print("next")
                 minEval = min(minEval, evaluation)
+                beta = min(beta, evaluation)
+                if beta <= alpha:
+                    break
                 if minEval == evaluation:
                     best_moves = moves
                     print(f"best moves = {best_moves} and minEval ={minEval}")
@@ -496,8 +499,7 @@ class GameState:
         self.board.board[xi][yi].value = 0
         _player = player if player else self.curr_player
         if _player == 1:
-            if self.board.board[xi][yi] not in self.board.p1_pieces:
-                self.gameprint()
+                # self.gameprint()
             self.board.p1_pieces.remove(self.board.board[xi][yi])
             self.board.p1_pieces.append(self.board.board[xf][yf])
         else:
