@@ -1,9 +1,5 @@
 BOARD_SIZE = 6
 
-P1_CORNER = [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-P2_CORNER = [(BOARD_SIZE - 1, BOARD_SIZE - 1), (BOARD_SIZE - 1, BOARD_SIZE - 2),
-             (BOARD_SIZE - 2, BOARD_SIZE - 1), (BOARD_SIZE - 2, BOARD_SIZE - 2)]
 
 def curr_player_pieces(game):
     """
@@ -47,19 +43,13 @@ def evaluate(player, game):
     # Given a specific board state, evaluate it for the player passed as parameter
     # Evaluation: manhattan distance to opponent corner
     evaluation = 0
-    pieces_in_spawn = 0
     if player == 1:
         for piece in game.state.board.p1_pieces:
-            evaluation += manhattan_distance(piece, player)
-            if piece.index in P1_CORNER:
-                pieces_in_spawn += 1
-
+            evaluation -= manhattan_distance(piece, player)
     if player == 2:
         for piece in game.state.board.p2_pieces:
-            evaluation += manhattan_distance(piece, player)
-            if piece.index in P2_CORNER:
-                pieces_in_spawn += 1
-    return evaluation - 5*pieces_in_spawn
+            evaluation -= manhattan_distance(piece, player)
+    return evaluation
 
 
 def manhattan_distance(coords_piece, player):
@@ -83,7 +73,7 @@ def do_move_sequence(game, moves_seq, player):
 
 def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('inf'), game=None):
     if depth == 0 or game.state.game_over != 0:
-        ev = evaluate(2, game) if max_player else evaluate(1, game)
+        ev = evaluate(game.state.curr_player, game) if max_player else evaluate(not_curr_player(game), game)
         return ev, move_seq
     best_moves = None
     if max_player == True:
@@ -106,11 +96,11 @@ def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('i
     else:
         saved_pos = get_saved_positions(not_curr_player(game), game)
         minEval = float('inf')
-        for moves in get_terminal_states(1, game):
+        for moves in get_terminal_states(not_curr_player(game), game):
             #set_saved_positions(not_curr_player(game), saved_pos, game)
-            do_move_sequence(game,moves,1)
+            do_move_sequence(game,moves,not_curr_player(game))
             evaluation = minimax(depth-1, True, moves, alpha, beta, game)[0]
-            undo_move_sequence(game,moves,1)
+            undo_move_sequence(game,moves,not_curr_player(game))
             #set_saved_positions(not_curr_player(game), saved_pos, game)
             minEval = min(minEval, evaluation)
             beta = min(beta, evaluation)

@@ -220,7 +220,7 @@ class Board:
                                 time.sleep(0.5)
                                 self.select_or_deselect_tiles(game, possible_move[0])
                                 self.make_move(game, possible_move[0], piece)
-                                self.select_or_deselect_tiles(game, best_moves[0][0])
+                                #self.select_or_deselect_tiles(game, best_moves[0][0])
                                 menu.check_match_ended()
                                 self.update_board_ai(game,possible_move[0])
                                 best_moves.pop(0)

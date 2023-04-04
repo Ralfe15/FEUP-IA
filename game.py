@@ -175,17 +175,20 @@ class GameState:
         return possible_moves
 
     def move_piece(self, xi, yi, xf, yf, cost=0,player =None):
-        self.move_credits -= cost
         self.board.board[xf][yf].value = self.board.board[xi][yi].value
         self.board.board[xi][yi].value = 0
 
         if self.curr_player == 1 or player == 1:
+            if self.board.board[xi][yi] not in self.board.p1_pieces:
+                return False
             self.board.p1_pieces.remove(self.board.board[xi][yi])
             self.board.p1_pieces.append(self.board.board[xf][yf])
         else:
+            if self.board.board[xi][yi] not in self.board.p2_pieces:
+                return False
             self.board.p2_pieces.remove(self.board.board[xi][yi])
             self.board.p2_pieces.append(self.board.board[xf][yf])
-
+        self.move_credits -= cost
         if self.move_credits == 0:
             if player is None:
                 self.curr_player = 1 if self.curr_player == 2 else 2
