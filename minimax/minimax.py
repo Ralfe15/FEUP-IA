@@ -1,5 +1,9 @@
 BOARD_SIZE = 6
 
+P1_CORNER = [(0, 0), (0, 1), (1, 0), (1, 1)]
+
+P2_CORNER = [(BOARD_SIZE - 1, BOARD_SIZE - 1), (BOARD_SIZE - 1, BOARD_SIZE - 2),
+             (BOARD_SIZE - 2, BOARD_SIZE - 1), (BOARD_SIZE - 2, BOARD_SIZE - 2)]
 
 def curr_player_pieces(game):
     """
@@ -43,13 +47,19 @@ def evaluate(player, game):
     # Given a specific board state, evaluate it for the player passed as parameter
     # Evaluation: manhattan distance to opponent corner
     evaluation = 0
+    pieces_in_spawn = 0
     if player == 1:
         for piece in game.state.board.p1_pieces:
-            evaluation -= manhattan_distance(piece, player)
+            evaluation += manhattan_distance(piece, player)
+            if piece.index in P1_CORNER:
+                pieces_in_spawn += 1
+
     if player == 2:
         for piece in game.state.board.p2_pieces:
-            evaluation -= manhattan_distance(piece, player)
-    return evaluation
+            evaluation += manhattan_distance(piece, player)
+            if piece.index in P2_CORNER:
+                pieces_in_spawn += 1
+    return evaluation - 5*pieces_in_spawn
 
 
 def manhattan_distance(coords_piece, player):
