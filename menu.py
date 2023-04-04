@@ -128,7 +128,15 @@ class Menu:
                     self.difficulty_selected = 3
                     return self.start_player_vs_ai()
         return None
-
+    def check_match_ended(self):
+        if self.game.state.game_over != 0:
+            self.menu_nr = 1
+            self.gamemode = 0
+            self.draw_winner(self.game.state.game_over)
+            self.board = board.Board(self.screen)
+            self.draw_menu()
+            return False
+        return True
 
     def check_match_end(self, event):
         if (
@@ -147,6 +155,8 @@ class Menu:
             self.draw_winner(self.game.state.game_over)
             self.board = board.Board(self.screen)
             self.draw_menu()
+            return False
+        return True
 
     def draw_winner(self, winner):
         if winner == 1:

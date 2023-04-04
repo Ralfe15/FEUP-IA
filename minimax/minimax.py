@@ -96,7 +96,7 @@ def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('i
     else:
         saved_pos = get_saved_positions(not_curr_player(game), game)
         minEval = float('inf')
-        for moves in get_terminal_states(not_curr_player(game), game):
+        for moves in get_terminal_states(1, game):
             #set_saved_positions(not_curr_player(game), saved_pos, game)
             do_move_sequence(game,moves,1)
             evaluation = minimax(depth-1, True, moves, alpha, beta, game)[0]
