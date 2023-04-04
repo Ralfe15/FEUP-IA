@@ -1,4 +1,5 @@
 import random
+import time
 import pygame
 import game
 import os
@@ -188,12 +189,6 @@ class Board:
         """
         if game.state.game_over != 0:
             return
-        if (game.players != 2) and game.state.curr_player == 2:
-            selected_tile, tile = self.ai_tile_selection(
-                game, self.p2_pieces)
-        elif game.players == 0:
-            selected_tile, tile = self.ai_tile_selection(
-                game, self.p1_pieces)
         else:
             tile = self.tile_clicked(event)
             selected_tile = False;            #selected_tile = self.get_selected_tile()
@@ -201,22 +196,26 @@ class Board:
             self.select_or_deselect_tiles(game, tile)
             self.make_move(game, tile, selected_tile)
 
-    def ai_tile_selection(self, game, pieces):
+    def ai_tile_selection(self, game):
         """
         Selects a ai tile and moves to one of its possible positions.
         """
-        _,best_moves = game.state.minimax(2,True,alpha = float('-inf'),beta =float('inf'))
+        _,best_moves = game.state.minimax(3,True,alpha = float('-inf'),beta =float('inf'))
         print(best_moves)
-        for piece in pieces:
-            for move in best_moves:
-                
+        cu_player = game.state.curr_player
+        pieces = self.p1_pieces if game.state.curr_player == 1 else self.p2_pieces
+        for move in best_moves:
+            for piece in pieces:
                 if move[0] == piece.index and move[1] != piece.index:
                     for possible_move in game.state.get_moves_for_tile(piece)[0]:
-                        print(possible_move.index) 
-                        if move[1] == possible_move.index:
-                            return piece,possible_move
-                       
-              
+                        if (isinstance(possible_move, int)):
+                            break
+                        if  move[1] == possible_move.index:
+                             time.sleep(1)
+                             self.select_or_deselect_tiles(game, possible_move)
+                             self.make_move(game, possible_move, piece)
+                             print(game.state.move_credits)
+                             break
             
     def select_or_deselect_tiles(self, game, tile):
         """

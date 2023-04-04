@@ -31,21 +31,24 @@ if __name__ == '__main__':
     # Loop until the user clicks the close button
     done = False
     g1 = None
-
+    _event = None
     # Main loop
     while not done:
         clock.tick(FPS)
-
         # --- Main event loop
+        if g1 is not None and( (
+            g1.players == 1 and g1.state.curr_player == 2
+        ) or g1.players == 0):
+            g1.state.board.ai_tile_selection(g1)
+            menu.check_match_end(_event)
+            g1.state.board.update_board(g1, _event)
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 done = True
-
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                _event = event
                 if menu.gamemode == 0:
                     g1 = menu.update_menu(event)
-
                 if g1 is not None:
                     menu.check_match_end(event)
                     g1.state.board.update_board(g1, event)

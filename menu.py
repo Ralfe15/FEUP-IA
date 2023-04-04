@@ -98,7 +98,8 @@ class Menu:
             pygame.display.update()
     
     def update_menu(self, event):
-
+        if event == None:
+            return None
         if event.type != pygame.MOUSEBUTTONDOWN:
             return
         if event.button == 1:
