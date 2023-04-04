@@ -211,7 +211,6 @@ class Board:
                         if (isinstance(possible_move, int)):
                             break
                         if  move[1] == possible_move.index:
-                             time.sleep(1)
                              self.select_or_deselect_tiles(game, possible_move)
                              self.make_move(game, possible_move, piece)
                              print(game.state.move_credits)
