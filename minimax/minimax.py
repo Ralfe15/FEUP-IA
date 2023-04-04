@@ -1,4 +1,8 @@
 BOARD_SIZE = 6
+P1_CORNER = [(0, 0), (0, 1), (1, 0), (1, 1)]
+
+P2_CORNER = [(BOARD_SIZE - 1, BOARD_SIZE - 1), (BOARD_SIZE - 1, BOARD_SIZE - 2),
+             (BOARD_SIZE - 2, BOARD_SIZE - 1), (BOARD_SIZE - 2, BOARD_SIZE - 2)]
 
 P1_CORNER = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
@@ -66,6 +70,7 @@ def evaluate(player, game):
             if piece.index in P1_CORNER:
                 enemy_pieces_in_target += 1
     return evaluation - (2 * pieces_in_spawn) + (5 * pieces_in_target) - (3 * enemy_pieces_in_target)
+
 
 
 def manhattan_distance(coords_piece, player):
