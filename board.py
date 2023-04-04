@@ -1,10 +1,8 @@
-import random
 import time
 import pygame
 import game
 import os
 import menu
-import sys
 
 # Define colors
 WHITE = (255, 255, 255)

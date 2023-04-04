@@ -1,7 +1,5 @@
 # Game data structure representing a certain state of a LESS match
-import copy
 import random
-import board
 
 BOARD_SIZE = 6
 DEBUG = True

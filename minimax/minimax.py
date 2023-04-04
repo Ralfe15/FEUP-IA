@@ -1,8 +1,4 @@
-import game
-from copy import deepcopy
-import pygame
 BOARD_SIZE = 6
-
 
 def curr_player_pieces(game):
     """

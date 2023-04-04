@@ -1,9 +1,5 @@
 import menu
-import game
-import board
 import pygame
-import os
-import sys
 from minimax.minimax import minimax
 
 if __name__ == '__main__':
