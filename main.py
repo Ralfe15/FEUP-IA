@@ -40,7 +40,7 @@ if __name__ == '__main__':
         if g1 is not None and ((
             g1.players == 1 and g1.state.curr_player == 2
         ) or g1.players == 0):
-            _, best_moves = minimax(1, True, alpha=float(
+            _, best_moves = minimax(menu.difficulty_selected, True, alpha=float(
                 '-inf'), beta=float('inf'), game=g1)
             g1.state.board.ai_tile_selection(g1, best_moves)
             menu.check_match_end(_event)

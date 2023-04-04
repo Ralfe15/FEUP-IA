@@ -86,16 +86,16 @@ def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('i
                 best_moves = moves
         return maxEval, best_moves
     else:
-        saved_pos = get_saved_positions(not_curr_player(),game)
+        saved_pos = get_saved_positions(not_curr_player(game),game)
         minEval = float('inf')
-        for moves in get_terminal_states_old(not_curr_player(), game):
-            set_saved_positions(not_curr_player(), saved_pos, game)
+        for moves in get_terminal_states_old(not_curr_player(game), game):
+            set_saved_positions(not_curr_player(game), saved_pos, game)
             for move in moves:
                 if len(move) != 2:
                     game.state.move_piece(move[0][0], move[0][1],
                                     move[1][0], move[1][1], player=1)
             evaluation = minimax(depth-1, True, moves, alpha, beta, game)[0]
-            set_saved_positions(not_curr_player(), saved_pos, game)
+            set_saved_positions(not_curr_player(game), saved_pos, game)
             minEval = min(minEval, evaluation)
             beta = min(beta, evaluation)
             if beta <= alpha:

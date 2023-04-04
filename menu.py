@@ -119,13 +119,13 @@ class Menu:
                     self.menu_nr = 1
                     self.draw_menu()
                 elif self.button1_rect.collidepoint(event.pos):
-                    self.difficulty_selected = 0
-                    return self.start_player_vs_ai()
-                elif self.button2_rect.collidepoint(event.pos):
                     self.difficulty_selected = 1
                     return self.start_player_vs_ai()
-                elif self.button3_rect.collidepoint(event.pos):
+                elif self.button2_rect.collidepoint(event.pos):
                     self.difficulty_selected = 2
+                    return self.start_player_vs_ai()
+                elif self.button3_rect.collidepoint(event.pos):
+                    self.difficulty_selected = 3
                     return self.start_player_vs_ai()
         return None
 
