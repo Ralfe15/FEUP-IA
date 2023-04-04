@@ -189,10 +189,10 @@ class Board:
         if game.state.game_over != 0:
             return
         if (game.players != 2) and game.state.curr_player == 2:
-            selected_tile, tile = self.random_tile_selection(
+            selected_tile, tile = self.ai_tile_selection(
                 game, self.p2_pieces)
         elif game.players == 0:
-            selected_tile, tile = self.random_tile_selection(
+            selected_tile, tile = self.ai_tile_selection(
                 game, self.p1_pieces)
         else:
             tile = self.tile_clicked(event)
@@ -205,6 +205,14 @@ class Board:
         """
         Selects a ai tile and moves to one of its possible positions.
         """
+        _,best_moves = game.state.minimax(2,True)
+        print(best_moves)
+        for move in best_moves:
+            print(move)
+        for piece in pieces:
+            for move in best_moves:
+                if move[0] == piece and move[1] != piece:
+                    return piece, move[1]
         while True:
             selected_tile = pieces[random.randint(0, 3)]
             if possible_moves := game.state.get_moves_for_tile(selected_tile):
@@ -222,7 +230,7 @@ class Board:
         elif game.state.curr_player == 2 and tile in self.p2_pieces:
             for i in self.p2_pieces:
                 i.selected = False if i != tile else not i.selected
-
+  
     def make_move(self, game, tile, selected_tile = False):
         """
         Moves the piece from selected tile to a valid tile.
