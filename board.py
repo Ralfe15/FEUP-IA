@@ -174,7 +174,6 @@ class Board:
         for i in range(len(self.p1_pieces)):
 
             if self.p1_pieces[i].selected:
-                print(f"2.this {self.p1_pieces[i]} and {self.p1_pieces} ")
                 return self.p1_pieces[i]
 
             elif self.p2_pieces[i].selected:
