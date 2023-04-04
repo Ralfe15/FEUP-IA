@@ -21,14 +21,6 @@ MOVE_CREDITS = 3
 #             board[BOARD_SIZE - 1 - i][BOARD_SIZE - 1 - j] = Tile(2)
 #     return board
 
-def manhattan_distance(coords_piece, player):
-
-    if player == 2:
-        return coords_piece.index[0] + coords_piece.index[1]
-    elif player == 1:
-        return (BOARD_SIZE - 1 - coords_piece.index[0]) + (BOARD_SIZE - 1 - coords_piece.index[1])
-
-
 class Game:
     def __init__(self, players, board):
         self.players = players
@@ -165,112 +157,6 @@ class GameState:
             moves.append([(x - 2, y), 1])
         return [move for move in moves if move[1] == cost]
 
-    def gameprint(self):
-        player1_pos = [
-            (piece.index[0], piece.index[1]) for piece in self.board.p1_pieces
-        ]
-        player2_pos = [
-            (piece.index[0], piece.index[1]) for piece in self.board.p2_pieces
-        ]
-        print("Player 1 =", player1_pos)
-        print("Player 2 =", player2_pos)
-
-    def curr_player_pieces(self):
-        """
-        returns a list of pieces on the board that belong to the current player. 
-        """
-        if self.curr_player == 1:
-            return self.board.p1_pieces
-        if self.curr_player == 2:
-            return self.board.p2_pieces
-
-    def player_pieces(self, player):
-        if player == 1:
-            return self.board.p1_pieces
-        if player == 2:
-            return self.board.p2_pieces
-
-    def not_curr_player(self):
-        if self.curr_player == 1:
-            return 2
-        if self.curr_player == 2:
-            return 1
-
-    def set_saved_positions(self, player, saved_positions):
-        pieces = self.player_pieces(player)
-        pieces.clear()
-        for i in range(4):
-            pieces.append(
-                self.board.board[saved_positions[i][0]][saved_positions[i][1]])
-
-    def get_saved_positions(self, player):
-        return [
-            (piece.index[0], piece.index[1]) for piece in self.player_pieces(player)
-        ]
-
-    def minimax(self, depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('inf')):
-        if depth == 0 or self.game_over != 0:
-            evaluate = self.evaluate(2) if max_player else self.evaluate(1)
-            return evaluate, move_seq
-        best_moves = None
-        if max_player == True:
-            saved_pos = self.get_saved_positions(self.curr_player)
-            maxEval = float('-inf')
-            for moves in self.get_terminal_states_old(self.curr_player):
-                self.set_saved_positions(self.curr_player, saved_pos)
-                for move in moves:
-                    if len(move) != 2:
-                        self.move_piece(move[0][0], move[0][1],
-                                        move[1][0], move[1][1], player=self.curr_player)
-                evaluation = self.minimax(
-                    depth-1, False, moves, alpha=alpha, beta=beta)[0]
-                self.set_saved_positions(self.curr_player, saved_pos)
-                maxEval = max(maxEval, evaluation)
-                alpha = max(alpha, evaluation)
-                if beta <= alpha:
-                    break
-                if maxEval == evaluation:
-                    best_moves = moves
-            return maxEval, best_moves
-        else:
-            saved_pos = self.get_saved_positions(self.not_curr_player())
-            minEval = float('inf')
-            for moves in self.get_terminal_states_old(self.not_curr_player()):
-                self.set_saved_positions(self.not_curr_player(), saved_pos)
-                for move in moves:
-                    if len(move) != 2:
-                        self.move_piece(move[0][0], move[0][1],
-                                        move[1][0], move[1][1], player=1)
-                evaluation = self.minimax(depth-1, True, moves, alpha, beta)[0]
-                self.set_saved_positions(self.not_curr_player(), saved_pos)
-                minEval = min(minEval, evaluation)
-                beta = min(beta, evaluation)
-                if beta <= alpha:
-                    break
-                if minEval == evaluation:
-                    best_moves = moves
-            return minEval, best_moves
-
-    def get_all_moves(self, player):
-        all_moves = {}
-        if player == 1:
-            for tile in self.board.p1_pieces:
-                self.get_all_moves_for_tile(tile, all_moves)
-        elif player == 2:
-            for tile in self.board.p2_pieces:
-                self.get_all_moves_for_tile(tile, all_moves)
-        return all_moves
-
-    def get_all_moves_for_tile(self, tile, all_moves):
-        # All possible moves with associated cost for player 1
-        all_moves[tile.index] = self.get_moves_by_cost(
-            tile.index[0], tile.index[1], 1)
-        if self.move_credits >= 2:
-            all_moves[tile.index] += self.get_moves_by_cost(
-                tile.index[0], tile.index[1], 2)
-        if self.move_credits == 3:
-            all_moves[tile.index] += self.get_moves_by_cost(
-                tile.index[0], tile.index[1], 3)
 
     def get_moves_for_tile(self, tile):
         all_moves = [self.get_moves_by_cost(tile.index[0], tile.index[1], 1)]
@@ -289,106 +175,6 @@ class GameState:
                     possible_moves.append((tile, j[1]))
 
         return possible_moves
-
-    def get_terminal_states_old(self, player):
-        # Returns a list of list, containing move sequences that use all 3 "move credits". Can be used as a stack and
-        # pop moves to get order
-        # The format is: [[((source_x1, source_y1), (dest_x1, dest_y1)), ((source_x2, source_y2), (dest_x2, dest_y2))]]
-        move_sequences = []
-        moves = self.get_all_moves(player)
-        for piece_coordinate, moves in moves.items():
-            for move in moves:
-                if move[1] == 3:
-                    # If move is a 3 cost, we are in a terminal state
-                    move_sequences.append(
-                        [((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))])
-
-                elif move[1] == 2:
-                    # If a move is a 2 cost, we need to explore all possible one cost moves after it
-                    intermediate_move = [
-                        ((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))]
-
-                    # Make move
-                    self.move_piece(
-                        piece_coordinate[0], piece_coordinate[1], move[0][0], move[0][1], player=player)
-
-                    # Explore all possible new 1 cost moves
-                    for new_piece_coordinate, new_moves in self.get_all_moves(player).items():
-                        move_sequences.extend(
-                            intermediate_move
-                            + [
-                                (
-                                    (
-                                        new_piece_coordinate[0],
-                                        new_piece_coordinate[1],
-                                    ),
-                                    (new_move[0][0], new_move[0][1]),
-                                )
-                            ]
-                            for new_move in new_moves
-                            if new_move[1] == 1
-                        )
-                    # Undo move
-                    self.move_piece(
-                        move[0][0], move[0][1], piece_coordinate[0], piece_coordinate[1], player=player)
-
-                elif move[1] == 1:
-                    # If a move is a 1 cost, we need to explore all possible 2 cost moves after it and two 1 cost moves
-                    # after it too
-                    first_intermediate_move = [
-                        ((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))]
-
-                    # Make move
-                    self.move_piece(
-                        piece_coordinate[0], piece_coordinate[1], move[0][0], move[0][1], player=player)
-
-                    # Explore all possible new 1 and 2 cost moves (2 cost are terminals)
-                    for new_piece_coordinate, new_moves in self.get_all_moves(player).items():
-                        for new_move in new_moves:
-                            if new_move[1] == 2:
-                                # 2 cost move (terminal)
-                                move_sequences.append(first_intermediate_move + [((new_piece_coordinate[0],
-                                                                                   new_piece_coordinate[1]),
-                                                                                  (new_move[0][0], new_move[0][1]))])
-
-                            if new_move[1] == 1:
-                                # 1 cost (explore one more layer)
-                                second_intermediate_move = first_intermediate_move + [((new_piece_coordinate[0],
-                                                                                        new_piece_coordinate[1]), (
-                                    new_move[0][0],
-                                    new_move[0][1]))]
-
-                                # Make second 1 cost move
-                                self.move_piece(new_piece_coordinate[0], new_piece_coordinate[1], new_move[0][0],
-                                                new_move[0][1], player=player)
-
-                                for new_layer2_piece_coordinate, new_layer2_moves in self.get_all_moves(player).items():
-                                    move_sequences.extend(
-                                        second_intermediate_move
-                                        + [
-                                            (
-                                                (
-                                                    new_layer2_piece_coordinate[0],
-                                                    new_layer2_piece_coordinate[1],
-                                                ),
-                                                (
-                                                    new_layer2_move[0][0],
-                                                    new_layer2_move[0][1],
-                                                ),
-                                            )
-                                        ]
-                                        for new_layer2_move in new_layer2_moves
-                                        if new_layer2_move[1] == 1
-                                    )
-                                # Undo second one cost move
-                                self.move_piece(new_move[0][0], new_move[0][1], new_piece_coordinate[0],
-                                                new_piece_coordinate[1], player=player)
-
-                    # Undo first layer move
-                    self.move_piece(
-                        move[0][0], move[0][1], piece_coordinate[0], piece_coordinate[1], player=player)
-        return move_sequences
-
 
     def move_piece(self, xi, yi, xf, yf, cost=0, player=None):
 
@@ -422,18 +208,6 @@ class GameState:
             self.game_over = 1
         elif all(coord.index in p1_corner for coord in self.board.p2_pieces):
             self.game_over = 2
-
-    def evaluate(self, player):
-        # Given a specific board state, evaluate it for the player passed as parameter
-        # Evaluation: manhattan distance to opponent corner
-        evaluation = 0
-        if player == 1:
-            for piece in self.board.p1_pieces:
-                evaluation -= manhattan_distance(piece, player)
-        if player == 2:
-            for piece in self.board.p2_pieces:
-                evaluation -= manhattan_distance(piece, player)
-        return evaluation
 
     def check_walls_simple_move(self, source_x, source_y, direction):
         cost = 1

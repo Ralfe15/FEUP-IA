@@ -203,11 +203,10 @@ class Board:
             if tile:
                 self.select_or_deselect_tiles(game, tile)
                 self.make_move(game, tile, selected_tile)
-    def ai_tile_selection(self, game):
+    def ai_tile_selection(self, game,best_moves):
         """
         Selects a ai tile and moves to one of its possible positions.
         """
-        _,best_moves = game.state.minimax(1,True,alpha = float('-inf'),beta =float('inf'))
         pieces = self.p1_pieces if game.state.curr_player == 1 else self.p2_pieces
         #while there is some movement
         while best_moves:

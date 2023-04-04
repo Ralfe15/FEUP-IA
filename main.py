@@ -4,6 +4,7 @@ import board
 import pygame
 import os
 import sys
+from minimax.minimax import minimax
 
 if __name__ == '__main__':
 
@@ -36,10 +37,12 @@ if __name__ == '__main__':
     while not done:
         clock.tick(FPS)
         # --- Main event loop
-        if g1 is not None and( (
+        if g1 is not None and ((
             g1.players == 1 and g1.state.curr_player == 2
         ) or g1.players == 0):
-            g1.state.board.ai_tile_selection(g1)
+            _, best_moves = minimax(1, True, alpha=float(
+                '-inf'), beta=float('inf'), game=g1)
+            g1.state.board.ai_tile_selection(g1, best_moves)
             menu.check_match_end(_event)
             g1.state.board.update_board(g1, _event)
         for event in pygame.event.get():
@@ -52,7 +55,6 @@ if __name__ == '__main__':
                 if g1 is not None:
                     menu.check_match_end(event)
                     g1.state.board.update_board(g1, event)
-                    
 
     # Close the window and quit.
     pygame.quit()
