@@ -31,10 +31,15 @@ if __name__ == '__main__':
     # Loop until the user clicks the close button
     done = False
     g1 = None
+    printed = False
 
     # Main loop
     while not done:
         clock.tick(FPS)
+
+        if g1 is not None and g1.state.curr_player == 2 and not printed:
+            print(g1.state.minimax(3, True, True))
+            printed = True
 
         # --- Main event loop
         for event in pygame.event.get():

@@ -1,5 +1,6 @@
 # Game data structure representing a certain state of a LESS match
 import copy
+import math
 import random
 import board
 
@@ -160,7 +161,7 @@ class GameState:
             for move in moves:
                 if move[1] == 3:
                     # If move is a 3 cost, we are in a terminal state
-                    move_sequences.append([(piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1])])
+                    move_sequences.append([((piece_coordinate[0], piece_coordinate[1]), (move[0][0], move[0][1]))])
 
                 elif move[1] == 2:
                     # If a move is a 2 cost, we need to explore all possible one cost moves after it
@@ -241,10 +242,86 @@ class GameState:
         if self.move_credits == 0:
             self.curr_player = 1 if self.curr_player == 2 else 2
             self.move_credits = MOVE_CREDITS
+        self.is_game_over()
 
-        # new_board = copy.deepcopy(self.board)
-        # new_board.board[yf][xf],new_board.board[yi][xi] = self.board.board[yi][xi], self.board.board[yf][xf]
-        # return GameState(new_board, self.curr_player)
+    def do_move_sequence(self, moves_seq):
+        for move in moves_seq:
+            self.move_piece(move[0][0], move[0][1], move[1][0], move[1][1])
+
+    def undo_move_sequence(self, moves_seq):
+        for move in moves_seq[::-1]:
+            self.move_piece(move[1][0], move[1][1], move[0][0], move[0][1])
+
+    def minimax(self, depth, max_player, firstMove, alpha=float('-inf'), beta=float('inf')):
+        if depth == 0 or self.game_over != 0:
+            evaluate = self.evaluate(2) if max_player else self.evaluate(1)
+            return evaluate
+
+        if max_player:
+            best = float("-inf")
+            for move in self.get_terminal_states(2): # Get all moves for maximizing player
+                self.do_move_sequence(move)
+                print(f"analysing move {move}")
+                if self.game_over == 2 and firstMove:
+                    return move
+                val = self.minimax(depth-1, False, False, alpha, beta)
+                self.undo_move_sequence(move)
+
+                if val > best:
+                    best = val
+                    best_move_white = move
+
+                alpha = max(alpha, best)
+
+                # Alpha Beta Pruning
+                if beta <= alpha:
+                    break
+
+            if firstMove:
+                return best_move_white
+            else:
+                return best
+
+        else:
+            best = float('inf')
+            for move in self.get_terminal_states(2): # Get all moves for maximizing player
+                self.do_move_sequence(move)
+                print(f"analysing move {move}")
+                if self.game_over == 2 and firstMove:
+                    return move
+                val = self.minimax(depth-1, True, False, alpha, beta)
+                self.undo_move_sequence(move)
+
+                if val < best:
+                    best = val
+                    best_move_black = move
+
+                beta = min(beta, best)
+
+                # Alpha Beta Pruning
+                if beta <= alpha:
+                    break
+
+            if firstMove:
+                return best_move_black
+            else:
+                return best
+
+
+
+
+
+    # def make_best_move(self):
+    #     bestScore = -math.inf
+    #     bestMove = None
+    #     for move in self.get_terminal_states():
+    #         self.do_move_sequence(move)
+    #         score = minimax(False, aiPlayer, ticTacBoard)
+    #         ticTacBoard.undo()
+    #         if (score > bestScore):
+    #             bestScore = score
+    #             bestMove = move
+    #     ticTacBoard.make_move(bestMove)
 
     def is_game_over(self):
         p1_corner = [(0, 0), (0, 1), (1, 0), (1, 1)]
@@ -262,10 +339,10 @@ class GameState:
         evaluation = 0
         if player == 1:
             for piece in self.board.p1_pieces:
-                evaluation -= manhattan_distance(piece, player)
+                evaluation -= manhattan_distance(piece.index, player)
         if player == 2:
             for piece in self.board.p2_pieces:
-                evaluation -= manhattan_distance(piece, player)
+                evaluation -= manhattan_distance(piece.index, player)
         return evaluation
 
     def check_walls_simple_move(self, source_x, source_y, direction):

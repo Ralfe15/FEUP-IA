@@ -196,7 +196,6 @@ class Board:
                         cost = k[1]
                 game.state.move_piece(selected_tile.index[0], selected_tile.index[1], tile.index[0], tile.index[1],
                                       cost)
-                game.state.is_game_over()
                 selected_tile.selected = False
 
         self.draw_window(game, selected_tile)
