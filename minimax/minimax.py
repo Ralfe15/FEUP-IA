@@ -71,27 +71,21 @@ def do_move_sequence(game, moves_seq, player):
         game.state.move_piece(move[0][0], move[0][1],
                               move[1][0], move[1][1], player=player)
 
-
 def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('inf'), game=None):
     if depth == 0 or game.state.game_over != 0:
         ev = evaluate(2, game) if max_player else evaluate(1, game)
         return ev, move_seq
     best_moves = None
     if max_player == True:
-        #saved_pos = get_saved_positions(game.state.curr_player, game)
+        saved_pos = get_saved_positions(game.state.curr_player, game)
         maxEval = float('-inf')
         for moves in get_terminal_states(game.state.curr_player, game):
-            #set_saved_positions(game.state.curr_player, saved_pos, game)
-            if game.state.game_over != 0:
-                return moves
-            #for move in moves:
-                #if len(move) != 2:
-                    #game.state.move_piece(move[0][0], move[0][1],move[1][0], move[1][1], player=game.state.curr_player)
+            set_saved_positions(game.state.curr_player, saved_pos, game)
             do_move_sequence(game,moves,game.state.curr_player)
             evaluation = minimax(
                 depth-1, False, moves, alpha=alpha, beta=beta, game=game)[0]
-            undo_move_sequence(game, moves,game.state.curr_player)
-            # set_saved_positions(game.state.curr_player, saved_pos, game)
+            undo_move_sequence(game,moves,game.state.curr_player)
+            #set_saved_positions(game.state.curr_player, saved_pos, game)
             maxEval = max(maxEval, evaluation)
             alpha = max(alpha, evaluation)
             if beta <= alpha:
@@ -100,16 +94,13 @@ def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('i
                 best_moves = moves
         return maxEval, best_moves
     else:
-        #saved_pos = get_saved_positions(not_curr_player(game), game)
+        saved_pos = get_saved_positions(not_curr_player(game), game)
         minEval = float('inf')
-        for moves in get_terminal_states(game.state.curr_player, game):
+        for moves in get_terminal_states(not_curr_player(game), game):
             #set_saved_positions(not_curr_player(game), saved_pos, game)
-            #for move in moves:
-                #if len(move) != 2:
-                    #game.state.move_piece(move[0][0], move[0][1],move[1][0], move[1][1], player=1)
-            do_move_sequence(game,moves,not_curr_player(game))
+            do_move_sequence(game,moves,1)
             evaluation = minimax(depth-1, True, moves, alpha, beta, game)[0]
-            undo_move_sequence(game,moves,not_curr_player(game))
+            undo_move_sequence(game,moves,1)
             #set_saved_positions(not_curr_player(game), saved_pos, game)
             minEval = min(minEval, evaluation)
             beta = min(beta, evaluation)
@@ -118,6 +109,55 @@ def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('i
             if minEval == evaluation:
                 best_moves = moves
         return minEval, best_moves
+"""
+
+def minimax(depth, max_player, move_seq=None, alpha=float('-inf'), beta=float('inf'), game=None):
+    if depth == 0 or game.state.game_over != 0:
+        ev = evaluate(2, game) if max_player else evaluate(1, game)
+        return ev, move_seq
+    
+    best_moves = None
+    if max_player == True:
+        saved_pos = get_saved_positions(game.state.curr_player, game)
+        maxEval = float('-inf')
+        for moves in get_terminal_states(game.state.curr_player, game):
+            set_saved_positions(game.state.curr_player, saved_pos, game)
+            if game.state.game_over != 0:
+                return moves
+            do_move_sequence(game,moves,game.state.curr_player)
+            evaluation = minimax(
+                depth-1, False, moves, alpha=alpha, beta=beta, game=game)[0]
+            #undo_move_sequence(game, moves,game.state.curr_player)
+            set_saved_positions(game.state.curr_player, saved_pos, game)
+            maxEval = max(maxEval, evaluation)
+            alpha = max(alpha, evaluation)
+            if beta <= alpha:
+                break
+            if maxEval == evaluation:
+                best_moves = moves
+        return maxEval, best_moves
+    else:
+        saved_pos = get_saved_positions(not_curr_player(game), game)
+        minEval = float('inf')
+        for moves in get_terminal_states(not_curr_player, game):
+            set_saved_positions(not_curr_player(game), saved_pos, game)
+            if game.state.game_over != 0:
+                return moves
+            #for move in moves:
+                #if len(move) != 2:
+                    #game.state.move_piece(move[0][0], move[0][1],move[1][0], move[1][1], player=1)
+            do_move_sequence(game,moves,1)
+            evaluation = minimax(depth-1, True, moves, alpha, beta, game)[0]
+            #undo_move_sequence(game,moves,not_curr_player(game))
+            set_saved_positions(not_curr_player(game), saved_pos, game)
+            minEval = min(minEval, evaluation)
+            beta = min(beta, evaluation)
+            if beta <= alpha:
+                break
+            if minEval == evaluation:
+                best_moves = moves
+        return minEval, best_moves
+"""
 
 
 def get_all_moves_for_tile(tile, all_moves, game):

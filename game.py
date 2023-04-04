@@ -174,13 +174,12 @@ class GameState:
 
         return possible_moves
 
-    def move_piece(self, xi, yi, xf, yf, cost=0, player=None):
-
+    def move_piece(self, xi, yi, xf, yf, cost=0,player =None):
         self.move_credits -= cost
         self.board.board[xf][yf].value = self.board.board[xi][yi].value
         self.board.board[xi][yi].value = 0
-        #_player = player if player else self.curr_player
-        if self.curr_player == 1:
+
+        if self.curr_player == 1 or player == 1:
             self.board.p1_pieces.remove(self.board.board[xi][yi])
             self.board.p1_pieces.append(self.board.board[xf][yf])
         else:
@@ -188,9 +187,10 @@ class GameState:
             self.board.p2_pieces.append(self.board.board[xf][yf])
 
         if self.move_credits == 0:
-            self.curr_player = 1 if self.curr_player == 2 else 2
+            if player is None:
+                self.curr_player = 1 if self.curr_player == 2 else 2
             self.move_credits = MOVE_CREDITS
-
+        self.is_game_over()
         # new_board = copy.deepcopy(self.board)
         # new_board.board[yf][xf],new_board.board[yi][xi] = self.board.board[yi][xi], self.board.board[yf][xf]
         # return GameState(new_board, self.curr_player)
