@@ -189,32 +189,49 @@ class Board:
         """
         if game.state.game_over != 0:
             return
-        else:
-            tile = self.tile_clicked(event)
-            selected_tile = False;            #selected_tile = self.get_selected_tile()
-        if tile:
+        if tile := self.tile_clicked(event):
             self.select_or_deselect_tiles(game, tile)
+            selected_tile = False
             self.make_move(game, tile, selected_tile)
 
+    def update_board_ai(self, game, tile):
+            """
+            Updates the game board based on user's input or ai's selection.
+            """
+            if game.state.game_over != 0:
+                return
+            else:
+                selected_tile = False;            #selected_tile = self.get_selected_tile()
+            if tile:
+                self.select_or_deselect_tiles(game, tile)
+                self.make_move(game, tile, selected_tile)
     def ai_tile_selection(self, game):
         """
         Selects a ai tile and moves to one of its possible positions.
         """
-        _,best_moves = game.state.minimax(3,True,alpha = float('-inf'),beta =float('inf'))
+        _,best_moves = game.state.minimax(1,True,alpha = float('-inf'),beta =float('inf'))
+        
         print(best_moves)
-        cu_player = game.state.curr_player
         pieces = self.p1_pieces if game.state.curr_player == 1 else self.p2_pieces
-        for move in best_moves:
+        #while there is some movement
+        while best_moves:
+            #for every piece
             for piece in pieces:
-                if move[0] == piece.index and move[1] != piece.index:
-                    for possible_move in game.state.get_moves_for_tile(piece)[0]:
+                #if present pos is equal to some piece go on
+                if best_moves[0][0] == piece.index :
+                    #now check if this position
+                    for possible_move in game.state.get_moves_for_tile(piece):
                         if (isinstance(possible_move, int)):
-                            break
-                        if  move[1] == possible_move.index:
-                             self.select_or_deselect_tiles(game, possible_move)
-                             self.make_move(game, possible_move, piece)
-                             print(game.state.move_credits)
-                             break
+                            continue
+                        if  best_moves[0][1] == possible_move[0].index:
+                                self.select_or_deselect_tiles(game, possible_move[0])
+                                self.make_move(game, possible_move[0], piece)
+                                self.select_or_deselect_tiles(game, best_moves[0][0])
+                                self.update_board_ai(game,possible_move[0])
+                                best_moves.pop(0)
+                                if len(best_moves) == 0:return
+                                print(game.state.move_credits)
+                                break
             
     def select_or_deselect_tiles(self, game, tile):
         """
@@ -231,10 +248,12 @@ class Board:
         """
         Moves the piece from selected tile to a valid tile.
         """
+        
         if (
             game.players != 1 or game.state.curr_player != 2
         ) and game.players != 0:
             selected_tile = self.get_selected_tile()
+
 
         if selected_tile:
             possible_moves = game.state.get_moves_for_tile(selected_tile)

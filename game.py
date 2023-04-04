@@ -196,13 +196,6 @@ class GameState:
         ]
         print("Player 1 =", player1_pos)
         print("Player 2 =", player2_pos)
-    def check_reverse_tuples(self,t):
-        def is_reverse_tuple(x):
-            if isinstance(x, tuple):
-                return x == x[::-1]
-            else:
-                return True
-        return all(is_reverse_tuple(x) for x in t) or all(is_reverse_tuple(x[::-1]) for x in t)
     def curr_player_pieces(self):
         if self.curr_player == 1:
             return self.board.p1_pieces
@@ -229,7 +222,6 @@ class GameState:
             saved_posa = [
                 (piece.index[0], piece.index[1]) for piece in self.curr_player_pieces()
             ]
-            print(f"SAVED POS ={saved_posa}")
             maxEval = float('-inf')
             for moves in self.get_terminal_states_old(self.curr_player):
                 self.curr_player_pieces().clear()
@@ -237,13 +229,11 @@ class GameState:
                     self.curr_player_pieces().append(
                         self.board.board[saved_posa[i][0]][saved_posa[i][1]])
                 for move in moves:
-                    print(f"Player {self.curr_player} (bot) the move is {move} in {moves}")
                     if len(move) != 2:
                         self.move_piece(move[0][0], move[0][1],
                                         move[1][0], move[1][1], player=self.curr_player)
                 evaluation = self.minimax(
                     depth-1, False, moves, alpha = alpha, beta = beta)[0]
-                print("Player 2 (bot): undoing move")
                 self.curr_player_pieces().clear()
                 for i in range(4):
                     self.curr_player_pieces().append(
@@ -257,36 +247,25 @@ class GameState:
                     print(f"best moves = {best_moves} and maxEval ={maxEval}")
             return maxEval, best_moves
         else:
-            print("ENTERING MIN PLAYER")
-            # self.gameprint()
             saved_pos = [
                 (piece.index[0], piece.index[1]) for piece in self.player_pieces(self.not_curr_player())
             ]
-            print(f"SAVED POS ={saved_pos}")
             minEval = float('inf')
             for moves in self.get_terminal_states_old(self.not_curr_player()):
                 self.player_pieces(self.not_curr_player()).clear()
                 for i in range(4):
                     self.player_pieces(self.not_curr_player()).append(
                         self.board.board[saved_pos[i][0]][saved_pos[i][1]])
-                print("AFTER GET THE BOARD BACK")
-                # self.gameprint()
                 for move in moves:
-                    print(f"Player {self.not_curr_player()} simulation the move is {move} in {moves}")
                     if len(move) != 2:
                         self.move_piece(move[0][0], move[0][1],
                                         move[1][0], move[1][1], player=1)
-                    print("AFTER A MOVE PIECE AND BEFORE A EVALUATION")
                     
-                    # self.gameprint()
                 evaluation = self.minimax(depth-1, True, moves, alpha, beta)[0]
                 self.player_pieces(self.not_curr_player()).clear()
                 for i in range(4):
                     self.player_pieces(self.not_curr_player()).append(
                         self.board.board[saved_pos[i][0]][saved_pos[i][1]])
-                print("AFTER A EVALUATION")
-                # self.gameprint()
-                print("next")
                 minEval = min(minEval, evaluation)
                 beta = min(beta, evaluation)
                 if beta <= alpha:
@@ -349,7 +328,6 @@ class GameState:
         # Returns a list of list, containing move sequences that use all 3 "move credits". Can be used as a stack and
         # pop moves to get order
         # The format is: [[((source_x1, source_y1), (dest_x1, dest_y1)), ((source_x2, source_y2), (dest_x2, dest_y2))]]
-        self.move_credits=3
         move_sequences = []
         moves = self.get_all_moves(player)
         for piece_coordinate, moves in moves.items():
@@ -423,7 +401,7 @@ class GameState:
         if len(move_sequences) == 1:
             print(move_sequences)
             print(self.move_credits)
-        return move_sequences[:1]
+        return move_sequences
 
     def get_terminal_states(self, player):
         """
